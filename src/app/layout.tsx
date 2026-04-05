@@ -20,7 +20,6 @@ export const metadata: Metadata = {
   ),
   title: "Luff. • Focus & Flow",
   description: "Minimalist typing tests and productivity tools.",
-  themeColor: "#0f172a",
 };
 
 export default function RootLayout({
@@ -54,7 +53,7 @@ export default function RootLayout({
             <DynamicFavicon />
             <div className="max-w-7xl mx-auto px-4 md:px-8">
               <Header />
-              <main className="min-h-screen">{children}</main>
+              <main className="min-h-[calc(100vh-5rem)]">{children}</main>
             </div>
           </Providers>
         </ThemeProvider>

@@ -34,7 +34,7 @@ export default function Header() {
   if (!mounted) return <header className="w-full h-20" />;
 
   return (
-    <header className="w-full flex items-center justify-between h-20 text-sub-text">
+    <header className="sticky top-0 z-50 w-full flex items-center justify-between h-20 text-sub-text bg-background/80 backdrop-blur-md">
       <Link
         href="/"
         className="flex items-center gap-2 text-2xl font-black text-primary cursor-pointer hover:opacity-80 transition-all"

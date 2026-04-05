@@ -3,40 +3,12 @@
 import Link from "next/link";
 import { Keyboard, Lock, Zap, Target } from "lucide-react";
 import { motion } from "framer-motion";
-import Image from "next/image";
+import dynamic from "next/dynamic";
 
-function BackgroundAnimation() {
-  return (
-    <div className="fixed inset-0 overflow-hidden -z-10 pointer-events-none opacity-50">
-      <motion.div
-        animate={{
-          x: [0, 100, -100, 0],
-          y: [0, -100, 100, 0],
-          scale: [1, 1.2, 0.8, 1],
-        }}
-        transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-        className="absolute -top-40 -left-40 w-96 h-96 bg-primary/20 blur-[120px] rounded-full"
-      />
-      <motion.div
-        animate={{
-          x: [0, -120, 120, 0],
-          y: [0, 80, -80, 0],
-          scale: [1, 0.9, 1.1, 1],
-        }}
-        transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
-        className="absolute bottom-1/4 right-0 w-[500px] h-[500px] bg-primary/10 blur-[150px] rounded-full"
-      />
-      <motion.div
-        animate={{
-          x: [0, 50, -50, 0],
-          y: [0, 150, -150, 0],
-        }}
-        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-        className="absolute top-1/2 left-1/3 w-72 h-72 bg-primary/15 blur-[100px] rounded-full"
-      />
-    </div>
-  );
-}
+const MascotPlant = dynamic(() => import("@/components/3d/MascotPlant"), {
+  ssr: false,
+  loading: () => <div className="w-full h-full min-h-[400px] bg-transparent animate-pulse rounded-2xl" />
+});
 
 export default function LandingPage() {
   const cards = [
@@ -80,17 +52,11 @@ export default function LandingPage() {
 
   return (
     <div className="w-full flex flex-col items-center">
-      <BackgroundAnimation />
 
       {/* Hero Section */}
-      <div className="flex flex-col lg:flex-row items-center justify-between w-full text-center lg:text-left py-20 md:py-32 gap-12 relative overflow-visible">
-        <motion.div
-          initial={{ opacity: 0, x: -50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="flex-1 max-w-2xl px-4 lg:px-0 z-20"
-        >
-          <h1 className="text-5xl md:text-6xl font-black text-foreground tracking-tighter mb-6 leading-[1]">
+      <div className="flex flex-col lg:flex-row items-center justify-between w-full text-center lg:text-left py-12 md:py-24 gap-12 relative overflow-visible">
+        <div className="flex-1 max-w-2xl px-4 lg:px-0 z-20 pointer-events-auto">
+          <h1 className="text-5xl md:text-6xl font-black text-foreground tracking-tighter mb-6 leading-[1.1]">
             Elevate your <span className="text-primary italic">everyday</span>{" "}
             focus.
           </h1>
@@ -104,72 +70,13 @@ export default function LandingPage() {
           >
             Start Practice →
           </Link>
-        </motion.div>
+        </div>
 
-        <div className="flex-1 relative w-full h-[400px] md:h-[600px] flex items-center justify-center">
-          {/* Main Crystal */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1.5, ease: "easeOut" }}
-            className="absolute z-10 w-[300px] h-[300px] md:w-[500px] md:h-[500px]"
-          >
-            <motion.div
-              animate={{ y: [0, -30, 0], rotate: [0, 10, 0] }}
-              transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-              className="w-full h-full"
-            >
-              <Image
-                src="/focus-3d.png"
-                alt="Focus Crystal"
-                fill
-                className="object-contain drop-shadow-[0_0_100px_rgba(var(--primary-rgb),0.3)]"
-                priority
-              />
-            </motion.div>
-          </motion.div>
-
-          {/* Floating Torus */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.5, x: 100 }}
-            animate={{ opacity: 1, scale: 1, x: 0 }}
-            transition={{ duration: 1.8, delay: 0.2, ease: "easeOut" }}
-            className="absolute -top-10 right-0 md:right-10 w-[150px] h-[150px] md:w-[250px] md:h-[250px] z-0"
-          >
-            <motion.div
-              animate={{ y: [0, 40, 0], rotate: [0, -20, 0], x: [0, 20, 0] }}
-              transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-              className="w-full h-full opacity-60 blur-[1px]"
-            >
-              <Image
-                src="/torus-3d.png"
-                alt="Torus"
-                fill
-                className="object-contain"
-              />
-            </motion.div>
-          </motion.div>
-
-          {/* Floating Sphere */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.5, x: -100 }}
-            animate={{ opacity: 1, scale: 1, x: 0 }}
-            transition={{ duration: 1.8, delay: 0.4, ease: "easeOut" }}
-            className="absolute -bottom-10 left-0 md:left-10 w-[120px] h-[120px] md:w-[220px] md:h-[220px] z-20"
-          >
-            <motion.div
-              animate={{ y: [0, -50, 0], rotate: [360, 0, 0], x: [0, -30, 0] }}
-              transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
-              className="w-full h-full opacity-80"
-            >
-              <Image
-                src="/sphere-3d.png"
-                alt="Sphere"
-                fill
-                className="object-contain drop-shadow-[0_0_40px_rgba(var(--primary-rgb),0.2)]"
-              />
-            </motion.div>
-          </motion.div>
+        {/* 3D Mascot Section */}
+        <div className="hidden xl:flex flex-1 relative w-full h-[400px] md:h-[600px] items-center justify-center lg:-mr-12 pointer-events-none mt-8 lg:mt-0">
+          <div className="absolute inset-0 w-full h-full z-10">
+             <MascotPlant />
+          </div>
         </div>
       </div>
 
