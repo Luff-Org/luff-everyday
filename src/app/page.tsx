@@ -5,9 +5,11 @@ import { Keyboard, Lock, Zap, Target } from "lucide-react";
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
 
-const MascotPlant = dynamic(() => import("@/components/3d/MascotPlant"), {
+const MascotCat = dynamic(() => import("@/components/3d/MascotCat"), {
   ssr: false,
-  loading: () => <div className="w-full h-full min-h-[400px] bg-transparent animate-pulse rounded-2xl" />
+  loading: () => (
+    <div className="w-full h-full min-h-[400px] bg-transparent animate-pulse rounded-2xl" />
+  ),
 });
 
 export default function LandingPage() {
@@ -52,7 +54,6 @@ export default function LandingPage() {
 
   return (
     <div className="w-full flex flex-col items-center">
-
       {/* Hero Section */}
       <div className="flex flex-col lg:flex-row items-center justify-between w-full text-center lg:text-left py-12 md:py-24 gap-12 relative overflow-visible">
         <div className="flex-1 max-w-2xl px-4 lg:px-0 z-20 pointer-events-auto">
@@ -73,9 +74,9 @@ export default function LandingPage() {
         </div>
 
         {/* 3D Mascot Section */}
-        <div className="hidden xl:flex flex-1 relative w-full h-[400px] md:h-[600px] items-center justify-center lg:-mr-12 pointer-events-auto mt-8 lg:mt-0">
+        <div className="hidden lg:flex flex-1 relative w-full h-[400px] md:h-[600px] items-center justify-center lg:-mr-12 pointer-events-auto mt-8 lg:mt-0">
           <div className="absolute inset-0 w-full h-full z-10">
-             <MascotPlant />
+            <MascotCat />
           </div>
         </div>
       </div>
