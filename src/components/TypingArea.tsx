@@ -92,10 +92,45 @@ export default function TypingArea() {
       </div>
 
       <div
-        className="relative w-full text-3xl font-normal tracking-wide h-[14rem] overflow-hidden"
+        className="relative w-full text-3xl font-normal tracking-wide h-[14rem] overflow-hidden cursor-text"
         ref={containerRef}
         style={{ lineHeight: "3.5rem" }}
+        onClick={() => {
+          const input = document.getElementById("hidden-mobile-input");
+          if (input) input.focus();
+        }}
       >
+        <input
+          id="hidden-mobile-input"
+          type="text"
+          className="absolute top-0 left-0 opacity-0 w-0 h-0 p-0 m-0 border-none outline-none z-[-1]"
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck="false"
+          data-gramm="false"
+          // We clear the value on every change so it doesn't build up a long string.
+          // The global keydown listener handles the actual characters.
+          onChange={(e) => {
+            const val = e.target.value;
+            if (val) {
+              const char = val.slice(-1);
+              if (char === " ") inputSpace();
+              else inputChar(char);
+              e.target.value = "";
+            }
+          }}
+        />
+
+        {/* Mobile/Tablet Keyboard Prompt */}
+        {status === "idle" && (
+          <div className="absolute inset-0 flex items-center justify-center lg:hidden z-40 pointer-events-none">
+            <div className="bg-background/80 backdrop-blur-sm border border-primary/30 text-primary px-6 py-3 rounded-full text-lg font-bold shadow-lg animate-pulse">
+              Tap to open keyboard
+            </div>
+          </div>
+        )}
+
         <div
           ref={caretRef}
           className={clsx(
