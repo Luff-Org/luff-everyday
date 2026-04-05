@@ -3,7 +3,6 @@
 import { useEffect, useRef } from "react";
 import { useTypingStore } from "@/store/useTypingStore";
 import { clsx } from "clsx";
-import { motion } from "framer-motion";
 import { RotateCcw } from "lucide-react";
 
 export default function TypingArea() {
@@ -28,6 +27,10 @@ export default function TypingArea() {
   // Keyboard Event Listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Allow interacting with the config menu
+      if (document.activeElement?.tagName === "BUTTON") {
+        if (e.key === "Enter" || e.key === " ") return;
+      }
       // Custom Shortcuts
       if (e.key === "Enter" && e.shiftKey) {
         e.preventDefault();
@@ -77,8 +80,8 @@ export default function TypingArea() {
       const activeWord = activeWordRef.current;
 
       const topPos = activeWord.offsetTop;
-      if (topPos > 64) {
-        container.scrollTo({ top: topPos - 64, behavior: "smooth" });
+      if (topPos > 56) {
+        container.scrollTo({ top: topPos - 56, behavior: "smooth" });
       } else {
         container.scrollTo({ top: 0, behavior: "auto" });
       }
@@ -93,9 +96,9 @@ export default function TypingArea() {
       </div>
 
       <div
-        className="relative w-full text-4xl font-medium tracking-wider h-[16rem] overflow-hidden"
+        className="relative w-full text-3xl font-normal tracking-wide h-[14rem] overflow-hidden"
         ref={containerRef}
-        style={{ lineHeight: "4rem" }}
+        style={{ lineHeight: "3.5rem" }}
       >
         <div
           ref={caretRef}

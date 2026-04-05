@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTypingStore } from "@/store/useTypingStore";
 import { RotateCcw, ChevronRight } from "lucide-react";
 import { Line } from "react-chartjs-2";
@@ -22,11 +22,30 @@ ChartJS.register(
 );
 
 import { useSession } from "next-auth/react";
+import { useThemeStore } from "@/store/useThemeStore";
 
 export default function ResultScreen() {
   const { correctChars, incorrectChars, wpmHistory, reset, duration, status } =
     useTypingStore();
   const { data: session } = useSession();
+  const currentThemeId = useThemeStore((s) => s.theme);
+
+  const [colors, setColors] = useState({
+    primary: "#646669",
+    sub: "#646669",
+    error: "#ca4754",
+  });
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const style = getComputedStyle(document.body);
+      setColors({
+        primary: style.getPropertyValue("--primary").trim() || "#e2b714",
+        sub: style.getPropertyValue("--sub-text").trim() || "#646669",
+        error: style.getPropertyValue("--error").trim() || "#ca4754",
+      });
+    }
+  }, [currentThemeId]);
 
   const finalWpm =
     wpmHistory.length > 0 ? wpmHistory[wpmHistory.length - 1].wpm : 0;
@@ -67,26 +86,26 @@ export default function ResultScreen() {
       {
         label: "WPM",
         data: wpmHistory.map((point) => point.wpm),
-        borderColor: "var(--primary)",
-        backgroundColor: "var(--primary)",
+        borderColor: colors.primary,
+        backgroundColor: colors.primary,
         tension: 0.4,
         pointStyle: wpmHistory.map((point) =>
           point.err > 0 ? "crossRot" : "circle",
         ),
         pointBackgroundColor: wpmHistory.map((point) =>
-          point.err > 0 ? "var(--error)" : "var(--primary)",
+          point.err > 0 ? colors.error : colors.primary,
         ),
         pointBorderColor: wpmHistory.map((point) =>
-          point.err > 0 ? "var(--error)" : "transparent",
+          point.err > 0 ? (colors.error || "#ff0000") : "transparent",
         ),
-        pointBorderWidth: wpmHistory.map((point) => (point.err > 0 ? 2 : 0)),
+        pointBorderWidth: wpmHistory.map((point) => (point.err > 0 ? 4 : 0)),
         pointRadius: wpmHistory.map((point) => (point.err > 0 ? 6 : 3)),
-        pointHoverRadius: 8,
+        pointHoverRadius: 10,
       },
       {
         label: "Raw WPM",
         data: wpmHistory.map((point) => point.rawWpm),
-        borderColor: "var(--sub-text)",
+        borderColor: colors.sub,
         backgroundColor: "transparent",
         borderDash: [5, 5],
         tension: 0.4,
@@ -99,7 +118,7 @@ export default function ResultScreen() {
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
-    color: "var(--sub-text)",
+    color: colors.sub,
     plugins: {
       tooltip: {
         titleFont: { family: "monospace" },
@@ -117,20 +136,31 @@ export default function ResultScreen() {
         title: {
           display: true,
           text: "Words Per Minute",
-          color: "var(--sub-text)",
+          color: colors.sub,
         },
         grid: { color: "rgba(128, 128, 128, 0.1)" },
-        ticks: { color: "var(--sub-text)", font: { family: "monospace" } },
+        ticks: { color: colors.sub, font: { family: "monospace" } },
       },
       x: {
         grid: { display: false },
-        ticks: { color: "var(--sub-text)", font: { family: "monospace" } },
+        ticks: { color: colors.sub, font: { family: "monospace" } },
       },
     },
   };
 
   return (
     <div className="w-full flex flex-col items-center animate-in fade-in duration-500 pb-12">
+      {/* Back Button to Test */}
+      <div className="w-full mb-8 flex justify-start">
+        <button
+          onClick={reset}
+          className="flex items-center gap-2 text-sub-text hover:text-primary transition-colors text-sm font-medium outline-none"
+        >
+          <ChevronRight className="w-4 h-4 rotate-180" />
+          back to test
+        </button>
+      </div>
+
       <div className="flex flex-col md:flex-row w-full gap-8 mt-4 items-stretch">
         {/* Left Side Main Stats */}
         <div className="flex flex-col justify-start gap-8 min-w-[180px]">

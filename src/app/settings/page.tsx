@@ -2,35 +2,79 @@
 
 import Header from "@/components/Header";
 import { useThemeStore } from "@/store/useThemeStore";
+import { useAppFontStore } from "@/store/useAppFontStore";
 import { clsx } from "clsx";
-import { Paintbrush, Check } from "lucide-react";
+import { Paintbrush, Monitor, ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import { themes } from "@/lib/themes";
+import { appFonts } from "@/lib/fonts";
+import { useRouter } from "next/navigation";
 
 export default function SettingsPage() {
   const { theme, setTheme } = useThemeStore();
+  const { appFontId, setAppFontId } = useAppFontStore();
+  const router = useRouter();
 
   return (
     <div className="w-full flex flex-col items-center flex-1 pb-16">
       <div className="max-w-5xl w-full px-8 pb-10">
         <Header />
 
-        <div className="mt-16 w-full animate-in fade-in duration-500">
-          <div className="flex flex-col mb-10 w-full items-center">
-            <h1 className="text-3xl font-bold text-sub-text flex items-center justify-center gap-2 mb-2">
-              <Paintbrush className="w-6 h-6" /> theme
+        <div className="mt-8 mb-8 w-full">
+          <button
+            onClick={() => router.back()}
+            className="flex items-center gap-2 text-sub-text hover:text-primary transition-colors text-sm font-medium w-fit outline-none"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            back
+          </button>
+        </div>
+
+        <div className="mt-8 w-full animate-in fade-in duration-500">
+          <div className="flex flex-col mb-4 w-full items-start">
+            <h1 className="text-xl font-bold text-foreground flex items-center gap-2 mb-1">
+              <Monitor className="w-5 h-5 text-primary" /> font family
             </h1>
+            <p className="text-sm text-sub-text opacity-70 max-w-2xl">
+              Change the font family used throughout the entire website. Choose
+              from modern sans-serifs, classic serifs, or playful display fonts.
+            </p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 w-full">
-            {themes.map((t) => (
-              <ThemeChip
-                key={t.id}
-                t={t}
-                selected={theme === t.id}
-                onSelect={() => setTheme(t.id)}
-              />
-            ))}
+          <div className="bg-foreground/[0.01] p-6 rounded-xl mb-16 shadow-none">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 w-full">
+              {appFonts.map((font) => (
+                <FontChip
+                  key={font.id}
+                  font={font}
+                  selected={appFontId === font.id}
+                  onSelect={() => setAppFontId(font.id, font.fontString)}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-col mb-4 w-full items-start">
+            <h1 className="text-xl font-bold text-foreground flex items-center gap-2 mb-1">
+              <Paintbrush className="w-5 h-5 text-primary" /> themes
+            </h1>
+            <p className="text-sm text-sub-text opacity-70 max-w-2xl">
+              Select a color palette that matches your vibe. We offer a wide
+              range of minimalist and vibrant themes.
+            </p>
+          </div>
+
+          <div className="bg-foreground/[0.01] p-6 rounded-xl shadow-none">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 w-full">
+              {themes.map((t) => (
+                <ThemeChip
+                  key={t.id}
+                  t={t}
+                  selected={theme === t.id}
+                  onSelect={() => setTheme(t.id)}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -61,15 +105,16 @@ function ThemeChip({
         color: t.primary,
       }}
       className={clsx(
-        "relative flex items-center px-4 py-2.5 rounded-lg border-2 transition-all duration-200 w-full overflow-hidden outline-none cursor-pointer",
-        active
-          ? "scale-[1.03] shadow-xl z-10"
-          : "scale-100 z-0 shadow-sm opacity-90",
+        "relative flex items-center px-4 py-3 rounded-lg border transition-all duration-300 w-full overflow-hidden outline-none cursor-pointer",
+        selected
+          ? "border-primary shadow-md z-10"
+          : "border-foreground/[0.05] bg-foreground/[0.03] hover:border-foreground/[0.1] hover:bg-foreground/[0.06]",
+        active ? "scale-[1.03]" : "scale-100",
       )}
     >
       <div
         className={clsx(
-          "flex-1 flex justify-center transition-transform duration-300 ease-out font-mono font-bold text-sm tracking-wide",
+          "flex-1 flex justify-center transition-transform duration-300 ease-out font-bold text-sm tracking-wide",
           active ? "-translate-x-4" : "translate-x-0",
         )}
       >
@@ -97,6 +142,35 @@ function ThemeChip({
           style={{ backgroundColor: t.sub }}
         />
       </div>
+    </button>
+  );
+}
+
+function FontChip({
+  font,
+  selected,
+  onSelect,
+}: {
+  font: any;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      onClick={onSelect}
+      style={{
+        fontFamily: font.fontString,
+      }}
+      className={clsx(
+        "relative flex items-center justify-center px-4 py-3.5 rounded-lg border transition-all duration-300 w-full min-h-[52px] overflow-hidden outline-none cursor-pointer",
+        selected
+          ? "border-primary text-background bg-primary shadow-md scale-[1.03] z-10 font-bold"
+          : "border-foreground/[0.08] text-sub-text bg-foreground/[0.04] hover:bg-foreground/[0.07] hover:border-foreground/[0.15] hover:text-foreground",
+      )}
+    >
+      <span className="text-center font-medium text-sm tracking-wide">
+        {font.name}
+      </span>
     </button>
   );
 }

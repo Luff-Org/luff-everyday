@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Roboto_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { themes } from "@/lib/themes";
 
 const inter = Inter({ subsets: ["latin"] });
+export const robotoMono = Roboto_Mono({ subsets: ["latin"], display: 'swap', variable: '--font-roboto-mono' });
 
 export const metadata: Metadata = {
   title: "Luff-Everyday \u2022 Focus & Flow",
@@ -39,7 +40,7 @@ export default function RootLayout({
       <head>
         <style dangerouslySetInnerHTML={{ __html: themeStyles }} />
       </head>
-      <body className={inter.className}>
+      <body className={`${inter.className} ${robotoMono.variable}`}>
         <ThemeProvider>
           <Providers>
             <main className="min-h-screen max-w-7xl mx-auto px-4 md:px-8">
