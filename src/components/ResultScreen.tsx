@@ -16,7 +16,13 @@ import {
 } from "chart.js";
 import { CHART_FALLBACK_COLORS } from "@/lib/constants";
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip);
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Tooltip,
+);
 
 export default function ResultScreen() {
   const { correctChars, incorrectChars, wpmHistory, reset, duration, status } =
@@ -24,7 +30,11 @@ export default function ResultScreen() {
   const { data: session } = useSession();
   const currentThemeId = useThemeStore((s) => s.theme);
 
-  const [colors, setColors] = useState<{ primary: string; sub: string; error: string }>({
+  const [colors, setColors] = useState<{
+    primary: string;
+    sub: string;
+    error: string;
+  }>({
     ...CHART_FALLBACK_COLORS,
   });
 

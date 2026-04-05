@@ -1,12 +1,16 @@
 "use client";
 
-import Header from "@/components/Header";
 import { useThemeStore } from "@/store/useThemeStore";
 import { useAppFontStore } from "@/store/useAppFontStore";
 import { clsx } from "clsx";
 import { Paintbrush, Monitor, ArrowLeft } from "lucide-react";
 import { useState } from "react";
-import { THEMES, APP_FONTS, type ThemeDef, type FontDef } from "@/lib/constants";
+import {
+  THEMES,
+  APP_FONTS,
+  type ThemeDef,
+  type FontDef,
+} from "@/lib/constants";
 import { useRouter } from "next/navigation";
 
 export default function SettingsPage() {
@@ -15,10 +19,8 @@ export default function SettingsPage() {
   const router = useRouter();
 
   return (
-    <div className="w-full flex flex-col items-center flex-1 pb-16">
-      <div className="max-w-5xl w-full px-8 pb-10">
-        <Header />
-
+    <div className="w-full flex flex-col items-center">
+      <div className="w-full pb-10">
         <div className="mt-8 mb-8 w-full">
           <button
             onClick={() => router.back()}

@@ -142,14 +142,12 @@ export default function TypingArea() {
                         charStateClass,
                       )}
                     >
-                      {isActive &&
-                        typedWord.length === 0 &&
-                        charIdx === 0 && (
-                          <span
-                            id="caret-marker"
-                            className="absolute left-0 -ml-[1.5px] top-0 h-full w-[1px]"
-                          />
-                        )}
+                      {isActive && typedWord.length === 0 && charIdx === 0 && (
+                        <span
+                          id="caret-marker"
+                          className="absolute left-0 -ml-[1.5px] top-0 h-full w-[1px]"
+                        />
+                      )}
                       {char}
                       {isActive && charIdx === typedWord.length - 1 && (
                         <span

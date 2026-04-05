@@ -2,26 +2,49 @@
 
 import Link from "next/link";
 import { Keyboard, Lock, Zap, Target } from "lucide-react";
-import Header from "@/components/Header";
-import { motion, useScroll, useTransform } from "framer-motion";
-import { useRef } from "react";
+import { motion } from "framer-motion";
+import Image from "next/image";
+
+function BackgroundAnimation() {
+  return (
+    <div className="fixed inset-0 overflow-hidden -z-10 pointer-events-none opacity-50">
+      <motion.div
+        animate={{
+          x: [0, 100, -100, 0],
+          y: [0, -100, 100, 0],
+          scale: [1, 1.2, 0.8, 1],
+        }}
+        transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+        className="absolute -top-40 -left-40 w-96 h-96 bg-primary/20 blur-[120px] rounded-full"
+      />
+      <motion.div
+        animate={{
+          x: [0, -120, 120, 0],
+          y: [0, 80, -80, 0],
+          scale: [1, 0.9, 1.1, 1],
+        }}
+        transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+        className="absolute bottom-1/4 right-0 w-[500px] h-[500px] bg-primary/10 blur-[150px] rounded-full"
+      />
+      <motion.div
+        animate={{
+          x: [0, 50, -50, 0],
+          y: [0, 150, -150, 0],
+        }}
+        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+        className="absolute top-1/2 left-1/3 w-72 h-72 bg-primary/15 blur-[100px] rounded-full"
+      />
+    </div>
+  );
+}
 
 export default function LandingPage() {
-  const containerRef = useRef(null);
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end end"],
-  });
-
-  const fadeOut = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
-  const scaleOut = useTransform(scrollYProgress, [0, 0.2], [1, 0.9]);
-
   const cards = [
     {
       title: "Typing Practice",
       desc: "Hone your speed and accuracy with our core test engine.",
       icon: (
-        <Keyboard className="w-12 h-12 mb-4 group-hover:scale-110 transition-transform text-primary" />
+        <Keyboard className="w-8 h-8 mb-4 group-hover:scale-110 transition-transform text-primary" />
       ),
       href: "/typing",
       active: true,
@@ -30,7 +53,7 @@ export default function LandingPage() {
       title: "Smart Todos",
       desc: "Organize your life with our intelligent task tracking.",
       icon: (
-        <Target className="w-12 h-12 mb-4 text-sub-text group-hover:scale-110 transition-transform" />
+        <Target className="w-8 h-8 mb-4 text-sub-text group-hover:scale-110 transition-transform" />
       ),
       href: "#",
       active: false,
@@ -39,7 +62,7 @@ export default function LandingPage() {
       title: "Deep Journal",
       desc: "Reflect and write daily entries securely.",
       icon: (
-        <Zap className="w-12 h-12 mb-4 text-sub-text group-hover:scale-110 transition-transform" />
+        <Zap className="w-8 h-8 mb-4 text-sub-text group-hover:scale-110 transition-transform" />
       ),
       href: "#",
       active: false,
@@ -48,7 +71,7 @@ export default function LandingPage() {
       title: "Life Analytics",
       desc: "Visualize your personal growth over time.",
       icon: (
-        <Lock className="w-12 h-12 mb-4 text-sub-text group-hover:scale-110 transition-transform" />
+        <Lock className="w-8 h-8 mb-4 text-sub-text group-hover:scale-110 transition-transform" />
       ),
       href: "#",
       active: false,
@@ -56,104 +79,147 @@ export default function LandingPage() {
   ];
 
   return (
-    <main
-      className="w-full flex flex-col items-center flex-1 h-[200vh]"
-      ref={containerRef}
-    >
-      <div className="w-full max-w-5xl px-8 flex flex-col items-center">
-        <Header isLanding={true} />
+    <div className="w-full flex flex-col items-center">
+      <BackgroundAnimation />
 
-        {/* Hero Section */}
+      {/* Hero Section */}
+      <div className="flex flex-col lg:flex-row items-center justify-between w-full text-center lg:text-left py-20 md:py-32 gap-12 relative overflow-visible">
         <motion.div
-          style={{ opacity: fadeOut, scale: scaleOut }}
-          className="flex-1 flex flex-col items-center justify-center w-full max-w-4xl text-center py-40 sticky top-20"
+          initial={{ opacity: 0, x: -50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="flex-1 max-w-2xl px-4 lg:px-0 z-20"
         >
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="perspective-1000"
+          <h1 className="text-5xl md:text-6xl font-black text-foreground tracking-tighter mb-6 leading-[1]">
+            Elevate your <span className="text-primary italic">everyday</span>{" "}
+            focus.
+          </h1>
+          <p className="text-lg md:text-xl text-sub-text max-w-xl leading-relaxed font-medium mb-12">
+            A minimalist suite of tools designed to help you organize thoughts,
+            practice skills, and reclaim your time.
+          </p>
+          <Link
+            href="/typing"
+            className="inline-flex items-center px-10 py-5 bg-primary text-background font-black rounded-2xl hover:scale-105 transition-transform text-lg shadow-[0_20px_60px_-10px_rgba(var(--primary-rgb),0.5)]"
           >
-            <h1 className="text-7xl md:text-8xl font-extrabold text-foreground tracking-tight mb-8 drop-shadow-2xl">
-              Elevate your{" "}
-              <span className="text-primary z-10 relative">everyday</span>{" "}
-              focus.
-            </h1>
-            <p className="text-2xl text-sub-text max-w-2xl mx-auto mb-16 leading-relaxed font-medium">
-              A minimalist suite of tools designed to help you organize
-              thoughts, practice skills, and reclaim your time.
-            </p>
-            <motion.div
-              animate={{ y: [0, 10, 0] }}
-              transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-              className="text-sub-text text-sm uppercase tracking-[0.3em] font-bold"
-            >
-              Scroll to explore
-            </motion.div>
-          </motion.div>
+            Start Practice →
+          </Link>
         </motion.div>
 
-        {/* Cards Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-5xl z-10 pb-40">
-          {cards.map((card, idx) => (
+        <div className="flex-1 relative w-full h-[400px] md:h-[600px] flex items-center justify-center">
+          {/* Main Crystal */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1.5, ease: "easeOut" }}
+            className="absolute z-10 w-[300px] h-[300px] md:w-[500px] md:h-[500px]"
+          >
             <motion.div
-              key={card.title}
-              initial={{ opacity: 0, y: 100, rotateX: 20 }}
-              whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
-              transition={{
-                duration: 0.6,
-                delay: idx * 0.2,
-                type: "spring",
-                stiffness: 100,
-              }}
-              whileHover={{
-                scale: 1.05,
-                rotateY: 5,
-                rotateX: -5,
-                boxShadow: "0px 20px 40px rgba(0,0,0,0.4)",
-              }}
-              style={{ transformStyle: "preserve-3d" }}
-              className="group relative flex flex-col bg-background/50 backdrop-blur-xl border border-white/5 p-10 rounded-3xl cursor-pointer"
+              animate={{ y: [0, -30, 0], rotate: [0, 10, 0] }}
+              transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+              className="w-full h-full"
             >
-              {card.active ? (
-                <Link
-                  href={card.href}
-                  className="absolute inset-0 z-20 rounded-3xl"
-                />
-              ) : (
-                <div className="absolute top-6 right-6 px-3 py-1 bg-white/5 border border-white/10 rounded-full text-xs font-bold text-sub-text/60 tracking-wider">
-                  COMING SOON
-                </div>
-              )}
-
-              <div
-                style={{ transform: "translateZ(30px)" }}
-                className="flex flex-col flex-1 pointer-events-none"
-              >
-                {card.icon}
-                <h3
-                  className={`text-3xl font-bold mb-4 ${card.active ? "text-foreground" : "text-foreground/50"}`}
-                >
-                  {card.title}
-                </h3>
-                <p className="text-sub-text text-lg leading-relaxed flex-1">
-                  {card.desc}
-                </p>
-              </div>
-
-              {card.active && (
-                <div
-                  style={{ transform: "translateZ(20px)" }}
-                  className="mt-8 font-bold text-primary group-hover:translate-x-2 transition-transform uppercase tracking-wider text-sm"
-                >
-                  Enter Practice →
-                </div>
-              )}
+              <Image
+                src="/focus-3d.png"
+                alt="Focus Crystal"
+                fill
+                className="object-contain drop-shadow-[0_0_100px_rgba(var(--primary-rgb),0.3)]"
+                priority
+              />
             </motion.div>
-          ))}
+          </motion.div>
+
+          {/* Floating Torus */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.5, x: 100 }}
+            animate={{ opacity: 1, scale: 1, x: 0 }}
+            transition={{ duration: 1.8, delay: 0.2, ease: "easeOut" }}
+            className="absolute -top-10 right-0 md:right-10 w-[150px] h-[150px] md:w-[250px] md:h-[250px] z-0"
+          >
+            <motion.div
+              animate={{ y: [0, 40, 0], rotate: [0, -20, 0], x: [0, 20, 0] }}
+              transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+              className="w-full h-full opacity-60 blur-[1px]"
+            >
+              <Image
+                src="/torus-3d.png"
+                alt="Torus"
+                fill
+                className="object-contain"
+              />
+            </motion.div>
+          </motion.div>
+
+          {/* Floating Sphere */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.5, x: -100 }}
+            animate={{ opacity: 1, scale: 1, x: 0 }}
+            transition={{ duration: 1.8, delay: 0.4, ease: "easeOut" }}
+            className="absolute -bottom-10 left-0 md:left-10 w-[120px] h-[120px] md:w-[220px] md:h-[220px] z-20"
+          >
+            <motion.div
+              animate={{ y: [0, -50, 0], rotate: [360, 0, 0], x: [0, -30, 0] }}
+              transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+              className="w-full h-full opacity-80"
+            >
+              <Image
+                src="/sphere-3d.png"
+                alt="Sphere"
+                fill
+                className="object-contain drop-shadow-[0_0_40px_rgba(var(--primary-rgb),0.2)]"
+              />
+            </motion.div>
+          </motion.div>
         </div>
       </div>
-    </main>
+
+      {/* Cards Section */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full pb-20">
+        {cards.map((card, idx) => (
+          <motion.div
+            key={card.title}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: idx * 0.1 }}
+            whileHover={{
+              y: -5,
+              backgroundColor: "rgba(var(--primary-rgb), 0.05)",
+              borderColor: "rgba(var(--primary-rgb), 0.2)",
+            }}
+            className="group relative flex flex-col bg-background/30 backdrop-blur-md border border-sub-text/20 p-6 rounded-2xl cursor-pointer transition-colors duration-300"
+          >
+            {card.active ? (
+              <Link
+                href={card.href}
+                className="absolute inset-0 z-20 rounded-2xl"
+              />
+            ) : (
+              <div className="absolute top-4 right-4 px-2 py-0.5 bg-white/5 border border-white/10 rounded-full text-[10px] font-black text-sub-text/40 tracking-widest">
+                SOON
+              </div>
+            )}
+
+            <div className="flex flex-col flex-1 pointer-events-none">
+              {card.icon}
+              <h3
+                className={`text-lg font-bold mb-2 ${card.active ? "text-foreground" : "text-foreground/40"}`}
+              >
+                {card.title}
+              </h3>
+              <p className="text-sub-text text-sm leading-tight line-clamp-2">
+                {card.desc}
+              </p>
+            </div>
+
+            {card.active && (
+              <div className="mt-4 font-black text-primary text-[10px] uppercase tracking-widest group-hover:translate-x-1 transition-transform">
+                Enter →
+              </div>
+            )}
+          </motion.div>
+        ))}
+      </div>
+    </div>
   );
 }

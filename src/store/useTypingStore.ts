@@ -120,6 +120,28 @@ export const useTypingStore = create<TypingState>((set, get) => ({
       else incorrect++;
     }
 
+    // Ensure final data point at time=duration exists
+    let finalHistory = state.wpmHistory;
+    const lastPoint = finalHistory[finalHistory.length - 1];
+    if (!lastPoint || lastPoint.time < state.duration) {
+      const elapsedMinutes = state.duration / 60;
+      const totalCorrect = correct;
+      const totalIncorrect = incorrect;
+      const wpm = elapsedMinutes > 0 ? Math.round(totalCorrect / 5 / elapsedMinutes) : 0;
+      const rawWpm = elapsedMinutes > 0 ? Math.round((totalCorrect + totalIncorrect) / 5 / elapsedMinutes) : 0;
+      const previousErrors = finalHistory.reduce((acc, curr) => acc + curr.err, 0);
+      const errorsThisTick = totalIncorrect - previousErrors;
+      finalHistory = [
+        ...finalHistory,
+        {
+          time: state.duration,
+          wpm,
+          rawWpm,
+          err: errorsThisTick > 0 ? errorsThisTick : 0,
+        },
+      ];
+    }
+
     set({
       status: "finished",
       endTime: Date.now(),
@@ -127,6 +149,7 @@ export const useTypingStore = create<TypingState>((set, get) => ({
       incorrectChars: incorrect,
       missedChars: missed,
       extraChars: extra,
+      wpmHistory: finalHistory,
     });
   },
 
@@ -134,11 +157,7 @@ export const useTypingStore = create<TypingState>((set, get) => ({
     const { status, startTime, duration, timeLeft, wpmHistory } = get();
     if (status !== "typing" || !startTime) return;
 
-    const newTimeLeft = timeLeft - 1;
-    if (newTimeLeft <= 0) {
-      get().finish();
-      return;
-    }
+    const newTimeLeft = Math.max(0, timeLeft - 1);
 
     const state = get();
     let correct = 0;
@@ -192,6 +211,10 @@ export const useTypingStore = create<TypingState>((set, get) => ({
         },
       ],
     });
+
+    if (newTimeLeft <= 0) {
+      get().finish();
+    }
   },
 
   inputChar: (char) => {

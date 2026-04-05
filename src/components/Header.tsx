@@ -1,18 +1,25 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTypingStore } from "@/store/useTypingStore";
 import { Activity, LogOut, Settings, User } from "lucide-react";
 import { useSession, signIn, signOut } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { DURATION_OPTIONS } from "@/lib/constants";
+import { motion, AnimatePresence } from "framer-motion";
 
-export default function Header({ isLanding = false }: { isLanding?: boolean }) {
+export default function Header() {
   const { status, tick, duration, setDuration } = useTypingStore();
   const { data: session } = useSession();
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
+
   const isTypingPage = pathname === "/typing";
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -24,52 +31,77 @@ export default function Header({ isLanding = false }: { isLanding?: boolean }) {
     return () => clearInterval(interval);
   }, [status, tick, isTypingPage]);
 
+  if (!mounted) return <header className="w-full h-20" />;
+
   return (
-    <header className="w-full flex items-center justify-between py-6 text-sub-text">
+    <header className="w-full flex items-center justify-between h-20 text-sub-text">
       <Link
         href="/"
-        className="flex items-center gap-2 text-2xl font-bold text-primary cursor-pointer hover:text-foreground transition"
+        className="flex items-center gap-2 text-2xl font-black text-primary cursor-pointer hover:opacity-80 transition-all"
       >
         <Activity className="w-8 h-8" />
-        <span className="tracking-tighter">Luff-Everyday</span>
+        <span className="tracking-tighter lowercase">luff.</span>
       </Link>
 
-      {isTypingPage && status === "idle" && (
-        <div className="flex gap-4 bg-background/50 p-2 rounded-full font-medium text-sm transition text-sub-text">
-          {DURATION_OPTIONS.map((t) => (
-            <button
-              key={t}
-              onClick={() => setDuration(t)}
-              className={`hover:text-foreground transition ${duration === t ? "text-primary bg-primary/10 px-2 rounded" : "px-2"}`}
+      <div className="flex-1 flex justify-center">
+        <AnimatePresence mode="wait">
+          {isTypingPage && status === "idle" && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="flex gap-4 bg-background/30 backdrop-blur-md p-1.5 rounded-xl border border-sub-text/10 font-bold text-xs transition text-sub-text shadow-sm"
             >
-              {t}s
-            </button>
-          ))}
-        </div>
-      )}
+              {DURATION_OPTIONS.map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setDuration(t)}
+                  className={`hover:text-foreground transition-all px-3 py-1.5 rounded-lg ${
+                    duration === t
+                      ? "text-primary bg-primary/10 shadow-inner"
+                      : ""
+                  }`}
+                >
+                  {t}s
+                </button>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
       <div className="flex items-center gap-6">
-        <Link href="/settings" className="hover:text-foreground transition">
+        <Link href="/settings" className="hover:text-foreground transition-all">
           <Settings className="w-5 h-5" />
         </Link>
-        {session ? (
-          <div className="flex items-center gap-4 text-sm font-medium">
-            <span className="text-foreground">{session.user?.name}</span>
-            <button
-              onClick={() => signOut()}
-              className="hover:text-error transition flex items-center gap-2"
+        <AnimatePresence mode="wait">
+          {session ? (
+            <motion.div
+              key="auth-user"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex items-center gap-4 text-sm font-bold"
             >
-              <LogOut className="w-5 h-5" />
-            </button>
-          </div>
-        ) : (
-          <button
-            onClick={() => signIn("google")}
-            className="hover:text-foreground transition flex items-center gap-2"
-          >
-            <User className="w-5 h-5" />
-          </button>
-        )}
+              <span className="text-foreground/80">{session.user?.name}</span>
+              <button
+                onClick={() => signOut()}
+                className="hover:text-error transition flex items-center gap-2 group"
+              >
+                <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />
+              </button>
+            </motion.div>
+          ) : (
+            <motion.button
+              key="auth-guest"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              onClick={() => signIn("google")}
+              className="hover:text-foreground transition flex items-center gap-2 group"
+            >
+              <User className="w-5 h-5 group-hover:scale-110 transition-transform" />
+            </motion.button>
+          )}
+        </AnimatePresence>
       </div>
     </header>
   );

@@ -6,7 +6,9 @@ import { useAppFontStore } from "@/store/useAppFontStore";
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const theme = useThemeStore((state) => state.theme);
-  const appFontFamilyString = useAppFontStore((state) => state.appFontFamilyString);
+  const appFontFamilyString = useAppFontStore(
+    (state) => state.appFontFamilyString,
+  );
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
