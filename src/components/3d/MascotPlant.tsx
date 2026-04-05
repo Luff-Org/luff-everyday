@@ -186,7 +186,7 @@ function Character({
 
     // Pupil Tracking
     const maxX = 0.08;
-    const maxY = 0.05;
+    const maxY = 0.15;
     [leftPupil, rightPupil].forEach((pupil) => {
       if (!pupil.current) return;
       if (isSad) {
@@ -200,8 +200,8 @@ function Character({
         );
         const targetY = THREE.MathUtils.clamp(
           mouse.current.y * maxY,
-          -0.04,
-          0.04,
+          -0.1,
+          0.1,
         );
         pupil.current.position.x += (targetX - pupil.current.position.x) * 0.15;
         pupil.current.position.y += (targetY - pupil.current.position.y) * 0.15;

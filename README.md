@@ -1,54 +1,104 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/Luff-Org/Luff-Everyday/main/public/focus-3d.png" width="120" height="120" alt="luff. logo" />
-  
-  # luff.
-  ### *Elevate your everyday focus.*
 
-  **[Live Demo →](https://luff-everyday.vercel.app/)**
+# 🐱 luff.
+
+### *Elevate your everyday focus.*
+
+> A minimalist productivity workspace that turns discipline into delight.
+> Type faster. Think clearer. Stay focused.
+
+**[✨ Live Demo →](https://luff-everyday.vercel.app/)** &nbsp;|&nbsp; **[🐛 Report Bug](https://github.com/Luff-Org/luff-everyday/issues)** &nbsp;|&nbsp; **[💡 Request Feature](https://github.com/Luff-Org/luff-everyday/issues)**
+
 </div>
 
 ---
 
-## 🌪️ The Vision
-**luff.** is a minimalist suite of productivity tools designed to help you reclaim your focus. Starting with a professional-grade typing engine, it combines high-performance interaction with deep aesthetic customization to create a "flow state" workspace.
+<div align="center">
+  <img src="public/homepage-preview.png" alt="luff. homepage with interactive 3D cat mascot" width="100%" style="border-radius: 12px;" />
+  <br />
+  <sub>Homepage featuring a theme-reactive 3D cat mascot that tracks your cursor and reacts to clicks 🐾</sub>
+</div>
 
 ---
 
-## ✨ Primary Features
+## 🧠 Why luff?
+
+Most productivity tools feel like work. **luff.** flips the script — it's a workspace you *want* to open. With an interactive 3D mascot that follows your eyes, 31 handcrafted color themes, and a typing engine built for flow state, it's productivity wrapped in personality.
+
+**This isn't another boring tool. This is your new daily ritual.**
+
+---
+
+## 🔥 Features at a Glance
+
+<table>
+<tr>
+<td width="50%">
 
 ### ⌨️ Elite Typing Engine
-*   **Precision Tracking:** Real-time WPM, raw WPM, and accuracy % with per-second historical data.
-*   **Visual Feedback:** A smooth, character-following caret and intelligent error highlighting.
-*   **Infinite Buffer:** Words auto-prefetch as you type, ensuring zero interruptions.
-*   **Pro Shortcuts:** `Shift+Enter` to restart, `Esc` to reset—all driven by keyboard-first UX.
+- **Real-time metrics** — WPM, raw WPM, accuracy %, all updating live
+- **Smart caret** — Smooth, character-following cursor with error highlighting
+- **Infinite buffer** — Words auto-prefetch, zero interruptions
+- **Keyboard-first** — `Shift+Enter` restart, `Esc` reset, no mouse needed
+
+</td>
+<td width="50%">
+
+### 🐱 Interactive 3D Mascot
+- **Eye tracking** — Pupils follow your cursor in real-time
+- **Whisker twitching** — Micro-animations for lifelike feel
+- **Click reactions** — Tap the cat for a "bonk" face 😿
+- **Hover purring** — Subtle vibration on hover
+- **Theme-reactive** — Colors shift with your chosen palette
+
+</td>
+</tr>
+<tr>
+<td width="50%">
 
 ### 🎨 Deep Customization
-*   **31+ Aesthetic Themes:** From sleek *Nord* and *Dracula* to vibrant *Vaporwave* and *Matrix* modes.
-*   **20 Typography Styles:** High-impact fonts including modern sans-serifs, classic serifs, and playful display families.
-*   **Dynamic Branding:** A theme-reactive favicon and UI that adapts instantly to your selected palette.
+- **31 aesthetic themes** — *Nord*, *Dracula*, *Vaporwave*, *Matrix*, and more
+- **20 font families** — Modern sans-serifs, classic serifs, playful displays
+- **Dynamic branding** — Favicon, UI, and mascot adapt to your palette
+- **Persistent settings** — Your preferences saved locally
 
-### 📊 Personal Analytics
-*   **WPM History Charts:** Beautiful, interactive line graphs showing your speed and mistakes over time.
-*   **Prisma Persistence:** Results are auto-saved to a secure PostgreSQL database for registered users.
-*   **Google OAuth:** Seamless, secure login to track your progress over days and weeks.
+</td>
+<td width="50%">
+
+### 📊 Progress Tracking
+- **WPM charts** — Interactive line graphs, speed + mistakes over time
+- **Cloud sync** — Results auto-saved via Prisma + PostgreSQL
+- **Google OAuth** — One-click login, seamless progress tracking
+- **Historical data** — Track growth over days, weeks, months
+
+</td>
+</tr>
+</table>
 
 ---
 
 ## 🛠️ Tech Stack
 
-| Layer | Technology |
-| :--- | :--- |
-| **Framework** | Next.js 14 (App Router) |
-| **State Management** | Zustand (with local persistence) |
-| **Database** | PostgreSQL + Prisma ORM |
-| **Authentication** | NextAuth.js (Google OAuth 2.0) |
-| **Visuals** | Framer Motion + Tailwind CSS |
-| **Charts** | Chart.js |
-| **Icons** | Lucide React |
+```
+Frontend:   Next.js 14 (App Router) + TypeScript
+3D Engine:  React Three Fiber + Three.js + @react-three/drei
+State:      Zustand (with localStorage persistence)
+Styling:    Tailwind CSS + Framer Motion
+Database:   PostgreSQL + Prisma ORM
+Auth:       NextAuth.js (Google OAuth 2.0)
+Charts:     Chart.js
+Icons:      Lucide React
+Deploy:     Vercel
+```
 
 ---
 
 ## 🚀 Getting Started
+
+### Prerequisites
+- Node.js 18+
+- PostgreSQL database
+- Google OAuth credentials
 
 ### 1. Clone & Install
 ```bash
@@ -58,13 +108,13 @@ npm install
 ```
 
 ### 2. Configure Environment
-Create a `.env` file in the root:
 ```env
-DATABASE_URL="postgresql://..." # Your PostgreSQL string
-GOOGLE_CLIENT_ID="..."           # From Google Cloud Console
-GOOGLE_CLIENT_SECRET="..."       # From Google Cloud Console
+# .env
+DATABASE_URL="postgresql://..."
+GOOGLE_CLIENT_ID="..."
+GOOGLE_CLIENT_SECRET="..."
 NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="..."            # Random string for encryption
+NEXTAUTH_SECRET="..."
 ```
 
 ### 3. Initialize Database
@@ -73,11 +123,11 @@ npx prisma generate
 npx prisma db push
 ```
 
-### 4. Run Development
+### 4. Run
 ```bash
 npm run dev
 ```
-Open **[localhost:3000](http://localhost:3000)** to begin.
+Open **[localhost:3000](http://localhost:3000)** and start typing.
 
 ---
 
@@ -85,19 +135,68 @@ Open **[localhost:3000](http://localhost:3000)** to begin.
 
 | Key | Action |
 | :--- | :--- |
-| `Shift + Enter` | Instant test restart |
-| `Escape` | Reset to start / Hide results |
+| `Any Key` | Auto-starts the timer |
+| `Shift + Enter` | Instant restart |
+| `Escape` | Reset test / hide results |
 | `Tab` | Next field |
-| `[Any Key]` | Auto-starts the timer |
 
 ---
 
-## 🤝 Project Links
-- **Organization:** [Luff-Org](https://github.com/Luff-Org)
-- **Deployment:** [luff-everyday.vercel.app](https://luff-everyday.vercel.app/)
+## 🎨 Theme Gallery
+
+> 31 themes, from sleek dark modes to vibrant neon aesthetics.
+> Every element — from the cat mascot to the favicon — adapts instantly.
+
+Some favorites: **Matrix** · **Nord** · **Dracula** · **Catppuccin** · **Vaporwave** · **Solarized** · **Tokyo Night** · **Gruvbox**
+
+---
+
+## 🐱 Meet the Mascot
+
+The 3D cat isn't just decoration — it's an interactive companion:
+
+- 👀 **Watches you** — Pupils track your mouse position with smooth interpolation
+- 😿 **Reacts to bonks** — Click it and it squishes, closes its eyes, and frowns
+- 🎨 **Adapts to themes** — Body, ears, whiskers, and stripes all shift color
+- ✨ **Subtle animations** — Idle floating, periodic blinking, whisker twitches
+
+Built entirely with procedural Three.js geometry — no external 3D models needed.
+
+---
+
+## 📁 Project Structure
+
+```
+src/
+├── app/              # Next.js App Router pages
+│   ├── page.tsx      # Landing page with 3D mascot
+│   ├── typing/       # Typing test engine
+│   └── settings/     # Theme & font customization
+├── components/
+│   ├── 3d/           # Three.js mascot components
+│   ├── Header.tsx    # Dynamic header with auth
+│   └── ...           # UI components
+├── store/            # Zustand state management
+└── lib/              # Constants, themes, utilities
+```
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Feel free to open issues or submit PRs.
+
+---
+
+## 📜 License
+
+This project is open-source under the [MIT License](LICENSE).
 
 ---
 
 <div align="center">
-  Built with ❤️ by the <b>luff.</b> team.
+  <br />
+  <b>Built with 🐱 and ❤️ by the <a href="https://github.com/Luff-Org">luff.</a> team</b>
+  <br />
+  <sub>Stop procrastinating. Start typing.</sub>
 </div>
