@@ -1,5 +1,10 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import {
+  DEFAULT_FONT_ID,
+  DEFAULT_FONT_STRING,
+  STORAGE_KEYS,
+} from "@/lib/constants";
 
 interface AppFontState {
   appFontFamilyString: string;
@@ -10,14 +15,12 @@ interface AppFontState {
 export const useAppFontStore = create<AppFontState>()(
   persist(
     (set) => ({
-      appFontFamilyString: 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-      appFontId: 'app-system',
+      appFontFamilyString: DEFAULT_FONT_STRING,
+      appFontId: DEFAULT_FONT_ID,
       setAppFontId: (id, fontString) => {
         set({ appFontId: id, appFontFamilyString: fontString });
       },
     }),
-    {
-      name: 'luff-app-font-storage',
-    }
+    { name: STORAGE_KEYS.font }
   )
 );

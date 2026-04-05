@@ -1,27 +1,24 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-
-type Theme = string;
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import { DEFAULT_THEME, STORAGE_KEYS } from "@/lib/constants";
 
 interface ThemeState {
-  theme: Theme;
-  setTheme: (theme: Theme) => void;
+  theme: string;
+  setTheme: (theme: string) => void;
 }
 
 export const useThemeStore = create<ThemeState>()(
   persist(
     (set) => ({
-      theme: 'theme-dark', // Default to Dark Luff
+      theme: DEFAULT_THEME,
       setTheme: (theme) => {
         set({ theme });
-        // Update document root class immediately
-        if (typeof document !== 'undefined') {
-          document.documentElement.className = theme === 'light' ? '' : theme;
+        if (typeof document !== "undefined") {
+          document.documentElement.className =
+            theme === "light" ? "" : theme;
         }
       },
     }),
-    {
-      name: 'luff-theme-storage',
-    }
+    { name: STORAGE_KEYS.theme }
   )
 );

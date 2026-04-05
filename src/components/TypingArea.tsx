@@ -4,12 +4,12 @@ import { useEffect, useRef } from "react";
 import { useTypingStore } from "@/store/useTypingStore";
 import { clsx } from "clsx";
 import { RotateCcw } from "lucide-react";
+import { LINE_HEIGHT_PX } from "@/lib/constants";
 
 export default function TypingArea() {
   const {
     status,
     timeLeft,
-    duration,
     originalWords,
     typedWords,
     currentWordIndex,
@@ -27,18 +27,14 @@ export default function TypingArea() {
   // Keyboard Event Listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Allow interacting with the config menu
       if (document.activeElement?.tagName === "BUTTON") {
         if (e.key === "Enter" || e.key === " ") return;
       }
-      // Custom Shortcuts
       if (e.key === "Enter" && e.shiftKey) {
         e.preventDefault();
         reset();
         return;
       }
-
-      // Ignore functional keys except Backspace and space
       if (e.metaKey || e.ctrlKey || e.altKey) return;
 
       if (e.key === "Backspace") {
@@ -48,7 +44,6 @@ export default function TypingArea() {
         e.preventDefault();
         inputSpace();
       } else if (e.key.length === 1) {
-        // Normal character
         e.preventDefault();
         inputChar(e.key);
       }
@@ -73,15 +68,16 @@ export default function TypingArea() {
     }
   }, [currentWordIndex, currentWordInput, typedWords, originalWords]);
 
-  // Scrolling logic - scroll active word into view safely
+  // Scrolling logic
   useEffect(() => {
     if (activeWordRef.current && containerRef.current) {
       const container = containerRef.current;
-      const activeWord = activeWordRef.current;
-
-      const topPos = activeWord.offsetTop;
-      if (topPos > 56) {
-        container.scrollTo({ top: topPos - 56, behavior: "smooth" });
+      const topPos = activeWordRef.current.offsetTop;
+      if (topPos > LINE_HEIGHT_PX) {
+        container.scrollTo({
+          top: topPos - LINE_HEIGHT_PX,
+          behavior: "smooth",
+        });
       } else {
         container.scrollTo({ top: 0, behavior: "auto" });
       }
@@ -90,7 +86,7 @@ export default function TypingArea() {
 
   return (
     <div className="w-full flex flex-col items-start gap-4">
-      {/* Live Timer directly over words */}
+      {/* Live Timer */}
       <div className="text-3xl font-bold text-primary tracking-wider transition-opacity duration-300 min-h-[40px]">
         {status === "typing" ? `${timeLeft}s` : ""}
       </div>
@@ -129,13 +125,13 @@ export default function TypingArea() {
                 )}
                 ref={isActive ? activeWordRef : null}
               >
-                {/* Original Characters + Input validation */}
                 {chars.map((char, charIdx) => {
                   let charStateClass = "text-sub-text";
                   if (charIdx < typedWord.length) {
-                    const typedChar = typedWord[charIdx];
                     charStateClass =
-                      typedChar === char ? "text-correct" : "text-error";
+                      typedWord[charIdx] === char
+                        ? "text-correct"
+                        : "text-error";
                   }
 
                   return (
@@ -146,12 +142,14 @@ export default function TypingArea() {
                         charStateClass,
                       )}
                     >
-                      {isActive && typedWord.length === 0 && charIdx === 0 && (
-                        <span
-                          id="caret-marker"
-                          className="absolute left-0 -ml-[1.5px] top-0 h-full w-[1px]"
-                        />
-                      )}
+                      {isActive &&
+                        typedWord.length === 0 &&
+                        charIdx === 0 && (
+                          <span
+                            id="caret-marker"
+                            className="absolute left-0 -ml-[1.5px] top-0 h-full w-[1px]"
+                          />
+                        )}
                       {char}
                       {isActive && charIdx === typedWord.length - 1 && (
                         <span
@@ -163,7 +161,6 @@ export default function TypingArea() {
                   );
                 })}
 
-                {/* Extra typed characters */}
                 {extraChars.map((extChar, extIdx) => (
                   <span
                     key={`ext-${extIdx}`}
@@ -179,7 +176,6 @@ export default function TypingArea() {
                   </span>
                 ))}
 
-                {/* Trailing space marker if perfectly typed */}
                 {isActive &&
                   typedWord.length === chars.length &&
                   extraChars.length === 0 && (
@@ -194,7 +190,7 @@ export default function TypingArea() {
         </div>
       </div>
 
-      {/* Restart Controls & Hints */}
+      {/* Restart Controls */}
       <div className="w-full flex flex-col items-center mt-12 gap-4 text-sm text-sub-text font-mono opacity-80 select-none">
         <button
           onClick={reset}

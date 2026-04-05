@@ -3,10 +3,10 @@ import { Inter, Roboto_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { themes } from "@/lib/themes";
+import { THEMES } from "@/lib/constants";
 
 const inter = Inter({ subsets: ["latin"] });
-export const robotoMono = Roboto_Mono({ subsets: ["latin"], display: 'swap', variable: '--font-roboto-mono' });
+const robotoMono = Roboto_Mono({ subsets: ["latin"], display: "swap", variable: "--font-roboto-mono" });
 
 export const metadata: Metadata = {
   title: "Luff-Everyday \u2022 Focus & Flow",
@@ -18,7 +18,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const themeStyles = themes
+  const themeStyles = THEMES
     .map(
       (t) => `
     .${t.id} {

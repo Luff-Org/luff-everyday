@@ -6,8 +6,7 @@ import { useAppFontStore } from "@/store/useAppFontStore";
 import { clsx } from "clsx";
 import { Paintbrush, Monitor, ArrowLeft } from "lucide-react";
 import { useState } from "react";
-import { themes } from "@/lib/themes";
-import { appFonts } from "@/lib/fonts";
+import { THEMES, APP_FONTS, type ThemeDef, type FontDef } from "@/lib/constants";
 import { useRouter } from "next/navigation";
 
 export default function SettingsPage() {
@@ -43,7 +42,7 @@ export default function SettingsPage() {
 
           <div className="bg-foreground/[0.01] p-6 rounded-xl mb-16 shadow-none">
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 w-full">
-              {appFonts.map((font) => (
+              {APP_FONTS.map((font) => (
                 <FontChip
                   key={font.id}
                   font={font}
@@ -66,7 +65,7 @@ export default function SettingsPage() {
 
           <div className="bg-foreground/[0.01] p-6 rounded-xl shadow-none">
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 w-full">
-              {themes.map((t) => (
+              {THEMES.map((t) => (
                 <ThemeChip
                   key={t.id}
                   t={t}
@@ -87,7 +86,7 @@ function ThemeChip({
   selected,
   onSelect,
 }: {
-  t: any;
+  t: ThemeDef;
   selected: boolean;
   onSelect: () => void;
 }) {
@@ -151,16 +150,14 @@ function FontChip({
   selected,
   onSelect,
 }: {
-  font: any;
+  font: FontDef;
   selected: boolean;
   onSelect: () => void;
 }) {
   return (
     <button
       onClick={onSelect}
-      style={{
-        fontFamily: font.fontString,
-      }}
+      style={{ fontFamily: font.fontString }}
       className={clsx(
         "relative flex items-center justify-center px-4 py-3.5 rounded-lg border transition-all duration-300 w-full min-h-[52px] overflow-hidden outline-none cursor-pointer",
         selected

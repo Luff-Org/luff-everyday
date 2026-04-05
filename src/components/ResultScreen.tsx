@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useTypingStore } from "@/store/useTypingStore";
+import { useThemeStore } from "@/store/useThemeStore";
+import { useSession } from "next-auth/react";
 import { RotateCcw, ChevronRight } from "lucide-react";
 import { Line } from "react-chartjs-2";
 import {
@@ -12,17 +14,9 @@ import {
   LineElement,
   Tooltip,
 } from "chart.js";
+import { CHART_FALLBACK_COLORS } from "@/lib/constants";
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Tooltip,
-);
-
-import { useSession } from "next-auth/react";
-import { useThemeStore } from "@/store/useThemeStore";
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip);
 
 export default function ResultScreen() {
   const { correctChars, incorrectChars, wpmHistory, reset, duration, status } =
@@ -30,19 +24,23 @@ export default function ResultScreen() {
   const { data: session } = useSession();
   const currentThemeId = useThemeStore((s) => s.theme);
 
-  const [colors, setColors] = useState({
-    primary: "#646669",
-    sub: "#646669",
-    error: "#ca4754",
+  const [colors, setColors] = useState<{ primary: string; sub: string; error: string }>({
+    ...CHART_FALLBACK_COLORS,
   });
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       const style = getComputedStyle(document.body);
       setColors({
-        primary: style.getPropertyValue("--primary").trim() || "#e2b714",
-        sub: style.getPropertyValue("--sub-text").trim() || "#646669",
-        error: style.getPropertyValue("--error").trim() || "#ca4754",
+        primary:
+          style.getPropertyValue("--primary").trim() ||
+          CHART_FALLBACK_COLORS.primary,
+        sub:
+          style.getPropertyValue("--sub-text").trim() ||
+          CHART_FALLBACK_COLORS.sub,
+        error:
+          style.getPropertyValue("--error").trim() ||
+          CHART_FALLBACK_COLORS.error,
       });
     }
   }, [currentThemeId]);
@@ -57,7 +55,6 @@ export default function ResultScreen() {
 
   useEffect(() => {
     if (status === "finished" && session?.user && finalWpm > 0) {
-      // Save result to db
       fetch("/api/tests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -66,7 +63,6 @@ export default function ResultScreen() {
     }
   }, [status, session, finalWpm, rawWpm, accuracy, duration]);
 
-  // Keyboard Event Listener for Shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.key === "Enter" && e.shiftKey) || e.key === "Escape") {
@@ -90,13 +86,13 @@ export default function ResultScreen() {
         backgroundColor: colors.primary,
         tension: 0.4,
         pointStyle: wpmHistory.map((point) =>
-          point.err > 0 ? "crossRot" : "circle",
+          point.err > 0 ? "crossRot" : ("circle" as const),
         ),
         pointBackgroundColor: wpmHistory.map((point) =>
           point.err > 0 ? colors.error : colors.primary,
         ),
         pointBorderColor: wpmHistory.map((point) =>
-          point.err > 0 ? (colors.error || "#ff0000") : "transparent",
+          point.err > 0 ? colors.error || "#ff0000" : "transparent",
         ),
         pointBorderWidth: wpmHistory.map((point) => (point.err > 0 ? 4 : 0)),
         pointRadius: wpmHistory.map((point) => (point.err > 0 ? 6 : 3)),
@@ -124,20 +120,15 @@ export default function ResultScreen() {
         titleFont: { family: "monospace" },
         bodyFont: { family: "monospace" },
         callbacks: {
-          label: function (context: any) {
-            return ` ${context.dataset.label}: ${context.parsed.y}`;
-          },
+          label: (context: any) =>
+            ` ${context.dataset.label}: ${context.parsed.y}`,
         },
       },
     },
     scales: {
       y: {
         beginAtZero: true,
-        title: {
-          display: true,
-          text: "Words Per Minute",
-          color: colors.sub,
-        },
+        title: { display: true, text: "Words Per Minute", color: colors.sub },
         grid: { color: "rgba(128, 128, 128, 0.1)" },
         ticks: { color: colors.sub, font: { family: "monospace" } },
       },
@@ -150,7 +141,7 @@ export default function ResultScreen() {
 
   return (
     <div className="w-full flex flex-col items-center animate-in fade-in duration-500 pb-12">
-      {/* Back Button to Test */}
+      {/* Back Button */}
       <div className="w-full mb-8 flex justify-start">
         <button
           onClick={reset}
@@ -182,13 +173,13 @@ export default function ResultScreen() {
           </div>
         </div>
 
-        {/* Chart Window */}
+        {/* Chart */}
         <div className="flex-1 w-full h-[250px] md:h-auto min-h-[300px]">
           <Line data={chartData} options={chartOptions} />
         </div>
       </div>
 
-      {/* Bottom Sub-Stats Row */}
+      {/* Sub-Stats */}
       <div className="flex flex-wrap gap-x-16 gap-y-6 mt-12 justify-start w-full">
         <div className="flex flex-col">
           <span className="text-lg text-primary tracking-wide">test type</span>
@@ -216,7 +207,7 @@ export default function ResultScreen() {
         </div>
       </div>
 
-      {/* Restart Controls & Hints */}
+      {/* Restart Controls */}
       <div className="w-full flex flex-col items-center mt-12 gap-4 text-sm text-sub-text font-mono opacity-80 select-none">
         <button
           onClick={reset}

@@ -6,6 +6,7 @@ import { Activity, LogOut, Settings, User } from "lucide-react";
 import { useSession, signIn, signOut } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { DURATION_OPTIONS } from "@/lib/constants";
 
 export default function Header({ isLanding = false }: { isLanding?: boolean }) {
   const { status, tick, duration, setDuration } = useTypingStore();
@@ -35,7 +36,7 @@ export default function Header({ isLanding = false }: { isLanding?: boolean }) {
 
       {isTypingPage && status === "idle" && (
         <div className="flex gap-4 bg-background/50 p-2 rounded-full font-medium text-sm transition text-sub-text">
-          {[15, 30, 60, 120].map((t) => (
+          {DURATION_OPTIONS.map((t) => (
             <button
               key={t}
               onClick={() => setDuration(t)}
