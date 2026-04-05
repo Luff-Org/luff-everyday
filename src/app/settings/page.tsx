@@ -24,7 +24,12 @@ export default function SettingsPage() {
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 w-full">
             {themes.map((t) => (
-              <ThemeChip key={t.id} t={t} selected={theme === t.id} onSelect={() => setTheme(t.id)} />
+              <ThemeChip
+                key={t.id}
+                t={t}
+                selected={theme === t.id}
+                onSelect={() => setTheme(t.id)}
+              />
             ))}
           </div>
         </div>
@@ -33,7 +38,15 @@ export default function SettingsPage() {
   );
 }
 
-function ThemeChip({ t, selected, onSelect }: { t: any, selected: boolean, onSelect: () => void }) {
+function ThemeChip({
+  t,
+  selected,
+  onSelect,
+}: {
+  t: any;
+  selected: boolean;
+  onSelect: () => void;
+}) {
   const [hovered, setHovered] = useState(false);
   const active = selected || hovered;
 
@@ -42,34 +55,47 @@ function ThemeChip({ t, selected, onSelect }: { t: any, selected: boolean, onSel
       onClick={onSelect}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      style={{ 
+      style={{
         backgroundColor: t.bg,
-        borderColor: selected ? t.primary : 'transparent',
-        color: t.primary
+        borderColor: selected ? t.primary : "transparent",
+        color: t.primary,
       }}
       className={clsx(
         "relative flex items-center px-4 py-2.5 rounded-lg border-2 transition-all duration-200 w-full overflow-hidden outline-none cursor-pointer",
-        active ? "scale-[1.03] shadow-xl z-10" : "scale-100 z-0 shadow-sm opacity-90"
+        active
+          ? "scale-[1.03] shadow-xl z-10"
+          : "scale-100 z-0 shadow-sm opacity-90",
       )}
     >
-      <div 
+      <div
         className={clsx(
           "flex-1 flex justify-center transition-transform duration-300 ease-out font-mono font-bold text-sm tracking-wide",
-          active ? "-translate-x-4" : "translate-x-0"
+          active ? "-translate-x-4" : "translate-x-0",
         )}
       >
         {t.name}
       </div>
 
-      <div 
+      <div
         className={clsx(
           "flex gap-1.5 z-10 items-center transition-all duration-300 ease-out absolute right-3",
-          active ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4 pointer-events-none"
+          active
+            ? "opacity-100 translate-x-0"
+            : "opacity-0 translate-x-4 pointer-events-none",
         )}
       >
-        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: t.bg, border: `1px solid ${t.sub}` }} />
-        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: t.primary }} />
-        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: t.sub }} />
+        <div
+          className="w-3 h-3 rounded-full"
+          style={{ backgroundColor: t.bg, border: `1px solid ${t.sub}` }}
+        />
+        <div
+          className="w-3 h-3 rounded-full"
+          style={{ backgroundColor: t.primary }}
+        />
+        <div
+          className="w-3 h-3 rounded-full"
+          style={{ backgroundColor: t.sub }}
+        />
       </div>
     </button>
   );

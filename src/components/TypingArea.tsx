@@ -4,11 +4,21 @@ import { useEffect, useRef } from "react";
 import { useTypingStore } from "@/store/useTypingStore";
 import { clsx } from "clsx";
 import { motion } from "framer-motion";
+import { RotateCcw } from "lucide-react";
 
 export default function TypingArea() {
-  const { 
-    status, timeLeft, duration, originalWords, typedWords, currentWordIndex, currentWordInput,
-    inputChar, deleteChar, inputSpace, reset
+  const {
+    status,
+    timeLeft,
+    duration,
+    originalWords,
+    typedWords,
+    currentWordIndex,
+    currentWordInput,
+    inputChar,
+    deleteChar,
+    inputSpace,
+    reset,
   } = useTypingStore();
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -18,19 +28,26 @@ export default function TypingArea() {
   // Keyboard Event Listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Custom Shortcuts
+      if (e.key === "Enter" && e.shiftKey) {
+        e.preventDefault();
+        reset();
+        return;
+      }
+
       // Ignore functional keys except Backspace and space
       if (e.metaKey || e.ctrlKey || e.altKey) return;
+
       if (e.key === "Backspace") {
         e.preventDefault();
         deleteChar();
       } else if (e.key === " " || e.code === "Space") {
         e.preventDefault();
         inputSpace();
-      } else if (e.key.length === 1) { // Normal character
+      } else if (e.key.length === 1) {
+        // Normal character
         e.preventDefault();
         inputChar(e.key);
-      } else if (e.key === "Escape") {
-        reset();
       }
     };
 
@@ -45,7 +62,7 @@ export default function TypingArea() {
       const container = containerRef.current;
       const cRect = container.getBoundingClientRect();
       const mRect = activeMarker.getBoundingClientRect();
-      
+
       const x = mRect.left - cRect.left + container.scrollLeft;
       const y = mRect.top - cRect.top + container.scrollTop;
 
@@ -56,15 +73,15 @@ export default function TypingArea() {
   // Scrolling logic - scroll active word into view safely
   useEffect(() => {
     if (activeWordRef.current && containerRef.current) {
-        const container = containerRef.current;
-        const activeWord = activeWordRef.current;
-        
-        const topPos = activeWord.offsetTop;
-        if (topPos > 64) {
-           container.scrollTo({ top: topPos - 64, behavior: 'smooth' });
-        } else {
-           container.scrollTo({ top: 0, behavior: 'auto' });
-        }
+      const container = containerRef.current;
+      const activeWord = activeWordRef.current;
+
+      const topPos = activeWord.offsetTop;
+      if (topPos > 64) {
+        container.scrollTo({ top: topPos - 64, behavior: "smooth" });
+      } else {
+        container.scrollTo({ top: 0, behavior: "auto" });
+      }
     }
   }, [currentWordIndex]);
 
@@ -75,24 +92,24 @@ export default function TypingArea() {
         {status === "typing" ? `${timeLeft}s` : ""}
       </div>
 
-      <div 
-        className="relative w-full text-4xl font-medium tracking-wider h-[16rem] overflow-hidden" 
+      <div
+        className="relative w-full text-4xl font-medium tracking-wider h-[16rem] overflow-hidden"
         ref={containerRef}
-        style={{ lineHeight: '4rem' }}
+        style={{ lineHeight: "4rem" }}
       >
-        <div 
-           ref={caretRef} 
-           className={clsx(
-              "absolute top-[0.1em] w-[3px] h-[1.3em] bg-primary rounded-full transition-all duration-100 ease-out z-50",
-              status === "idle" && "animate-[blink_1s_step-end_infinite]"
-           )}
+        <div
+          ref={caretRef}
+          className={clsx(
+            "absolute top-[0.1em] w-[3px] h-[1.3em] bg-primary rounded-full transition-all duration-100 ease-out z-50",
+            status === "idle" && "animate-[blink_1s_step-end_infinite]",
+          )}
         />
-        
+
         <div className="flex flex-wrap gap-x-3 transition-transform duration-300">
           {originalWords.map((word, wordIdx) => {
             const isActive = wordIdx === currentWordIndex;
             const isTyped = wordIdx < currentWordIndex;
-            
+
             let typedWord = "";
             if (isTyped) typedWord = typedWords[wordIdx];
             else if (isActive) typedWord = currentWordInput;
@@ -101,48 +118,98 @@ export default function TypingArea() {
             const extraChars = typedWord.slice(word.length).split("");
 
             return (
-              <div 
-                  key={wordIdx} 
-                  className={clsx("relative flex", isTyped && typedWord !== word && "border-b-2 border-error")}
-                  ref={isActive ? activeWordRef : null}
+              <div
+                key={wordIdx}
+                className={clsx(
+                  "relative flex",
+                  isTyped && typedWord !== word && "border-b-2 border-error",
+                )}
+                ref={isActive ? activeWordRef : null}
               >
                 {/* Original Characters + Input validation */}
                 {chars.map((char, charIdx) => {
                   let charStateClass = "text-sub-text";
                   if (charIdx < typedWord.length) {
                     const typedChar = typedWord[charIdx];
-                    charStateClass = typedChar === char ? "text-correct" : "text-error";
+                    charStateClass =
+                      typedChar === char ? "text-correct" : "text-error";
                   }
 
                   return (
-                    <span key={charIdx} className={clsx("transition-colors relative", charStateClass)}>
-                      {isActive && typedWord.length === 0 && charIdx === 0 && <span id="caret-marker" className="absolute left-0 -ml-[1.5px] top-0 h-full w-[1px]" />}
+                    <span
+                      key={charIdx}
+                      className={clsx(
+                        "transition-colors relative",
+                        charStateClass,
+                      )}
+                    >
+                      {isActive && typedWord.length === 0 && charIdx === 0 && (
+                        <span
+                          id="caret-marker"
+                          className="absolute left-0 -ml-[1.5px] top-0 h-full w-[1px]"
+                        />
+                      )}
                       {char}
-                      {isActive && charIdx === typedWord.length - 1 && <span id="caret-marker" className="absolute right-0 -mr-[1.5px] top-0 h-full w-[1px]" />}
+                      {isActive && charIdx === typedWord.length - 1 && (
+                        <span
+                          id="caret-marker"
+                          className="absolute right-0 -mr-[1.5px] top-0 h-full w-[1px]"
+                        />
+                      )}
                     </span>
                   );
                 })}
-                
+
                 {/* Extra typed characters */}
                 {extraChars.map((extChar, extIdx) => (
-                  <span key={`ext-${extIdx}`} className="text-error opacity-70 relative">
+                  <span
+                    key={`ext-${extIdx}`}
+                    className="text-error opacity-70 relative"
+                  >
                     {extChar}
-                    {isActive && extIdx === extraChars.length - 1 && <span id="caret-marker" className="absolute right-0 -mr-[1.5px] top-0 h-full w-[1px]" />}
+                    {isActive && extIdx === extraChars.length - 1 && (
+                      <span
+                        id="caret-marker"
+                        className="absolute right-0 -mr-[1.5px] top-0 h-full w-[1px]"
+                      />
+                    )}
                   </span>
                 ))}
 
                 {/* Trailing space marker if perfectly typed */}
-                {isActive && typedWord.length === chars.length && extraChars.length === 0 && <span id="caret-marker" className="absolute right-0 -mr-[1.5px] top-0 h-full w-[1px]" />}
+                {isActive &&
+                  typedWord.length === chars.length &&
+                  extraChars.length === 0 && (
+                    <span
+                      id="caret-marker"
+                      className="absolute right-0 -mr-[1.5px] top-0 h-full w-[1px]"
+                    />
+                  )}
               </div>
             );
           })}
         </div>
+      </div>
 
-        {status === "idle" && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity font-sans text-xl text-sub-text bg-transparent">
-            Type any key to start...
+      {/* Restart Controls & Hints */}
+      <div className="w-full flex flex-col items-center mt-12 gap-4 text-sm text-sub-text font-mono opacity-80 select-none">
+        <button
+          onClick={reset}
+          className="hover:text-foreground transition p-4 rounded-full hover:bg-background/50 outline-none focus:bg-background/80 focus:text-foreground"
+          title="Restart Test"
+          tabIndex={1}
+        >
+          <RotateCcw className="w-6 h-6" />
+        </button>
+
+        <div className="flex flex-col items-center gap-2 mt-2 opacity-70">
+          <div className="flex items-center gap-2">
+            <kbd className="bg-card-bg px-2 py-0.5 rounded text-xs">shift</kbd>
+            <span>+</span>
+            <kbd className="bg-card-bg px-2 py-0.5 rounded text-xs">enter</kbd>
+            <span className="ml-2">- restart test</span>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

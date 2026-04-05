@@ -18,19 +18,23 @@ ChartJS.register(
   LinearScale,
   PointElement,
   LineElement,
-  Tooltip
+  Tooltip,
 );
 
 import { useSession } from "next-auth/react";
 
 export default function ResultScreen() {
-  const { correctChars, incorrectChars, wpmHistory, reset, duration, status } = useTypingStore();
+  const { correctChars, incorrectChars, wpmHistory, reset, duration, status } =
+    useTypingStore();
   const { data: session } = useSession();
 
-  const finalWpm = wpmHistory.length > 0 ? wpmHistory[wpmHistory.length - 1].wpm : 0;
-  const rawWpm = wpmHistory.length > 0 ? wpmHistory[wpmHistory.length - 1].rawWpm : 0;
+  const finalWpm =
+    wpmHistory.length > 0 ? wpmHistory[wpmHistory.length - 1].wpm : 0;
+  const rawWpm =
+    wpmHistory.length > 0 ? wpmHistory[wpmHistory.length - 1].rawWpm : 0;
   const totalChars = correctChars + incorrectChars;
-  const accuracy = totalChars > 0 ? Number(((correctChars / totalChars) * 100).toFixed(2)) : 0;
+  const accuracy =
+    totalChars > 0 ? Number(((correctChars / totalChars) * 100).toFixed(2)) : 0;
 
   useEffect(() => {
     if (status === "finished" && session?.user && finalWpm > 0) {
@@ -43,8 +47,20 @@ export default function ResultScreen() {
     }
   }, [status, session, finalWpm, rawWpm, accuracy, duration]);
 
+  // Keyboard Event Listener for Shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.key === "Enter" && e.shiftKey) || e.key === "Escape") {
+        e.preventDefault();
+        reset();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [reset]);
+
   if (status !== "finished") return null;
-  
+
   const chartData = {
     labels: wpmHistory.map((point) => point.time),
     datasets: [
@@ -54,11 +70,17 @@ export default function ResultScreen() {
         borderColor: "var(--primary)",
         backgroundColor: "var(--primary)",
         tension: 0.4,
-        pointStyle: wpmHistory.map((point) => point.err > 0 ? "crossRot" : "circle"),
-        pointBackgroundColor: wpmHistory.map((point) => point.err > 0 ? "var(--error)" : "var(--primary)"),
-        pointBorderColor: wpmHistory.map((point) => point.err > 0 ? "var(--error)" : "transparent"),
-        pointBorderWidth: wpmHistory.map((point) => point.err > 0 ? 2 : 0),
-        pointRadius: wpmHistory.map((point) => point.err > 0 ? 6 : 3),
+        pointStyle: wpmHistory.map((point) =>
+          point.err > 0 ? "crossRot" : "circle",
+        ),
+        pointBackgroundColor: wpmHistory.map((point) =>
+          point.err > 0 ? "var(--error)" : "var(--primary)",
+        ),
+        pointBorderColor: wpmHistory.map((point) =>
+          point.err > 0 ? "var(--error)" : "transparent",
+        ),
+        pointBorderWidth: wpmHistory.map((point) => (point.err > 0 ? 2 : 0)),
+        pointRadius: wpmHistory.map((point) => (point.err > 0 ? 6 : 3)),
         pointHoverRadius: 8,
       },
       {
@@ -70,8 +92,8 @@ export default function ResultScreen() {
         tension: 0.4,
         pointRadius: 0,
         pointHoverRadius: 0,
-      }
-    ]
+      },
+    ],
   };
 
   const chartOptions = {
@@ -83,39 +105,50 @@ export default function ResultScreen() {
         titleFont: { family: "monospace" },
         bodyFont: { family: "monospace" },
         callbacks: {
-          label: function(context: any) {
+          label: function (context: any) {
             return ` ${context.dataset.label}: ${context.parsed.y}`;
-          }
-        }
-      }
+          },
+        },
+      },
     },
     scales: {
       y: {
         beginAtZero: true,
-        title: { display: true, text: "Words Per Minute", color: "var(--sub-text)" },
+        title: {
+          display: true,
+          text: "Words Per Minute",
+          color: "var(--sub-text)",
+        },
         grid: { color: "rgba(128, 128, 128, 0.1)" },
-        ticks: { color: "var(--sub-text)", font: { family: "monospace" } }
+        ticks: { color: "var(--sub-text)", font: { family: "monospace" } },
       },
       x: {
         grid: { display: false },
-        ticks: { color: "var(--sub-text)", font: { family: "monospace" } }
-      }
-    }
+        ticks: { color: "var(--sub-text)", font: { family: "monospace" } },
+      },
+    },
   };
 
   return (
     <div className="w-full flex flex-col items-center animate-in fade-in duration-500 pb-12">
       <div className="flex flex-col md:flex-row w-full gap-8 mt-4 items-stretch">
-        
         {/* Left Side Main Stats */}
         <div className="flex flex-col justify-start gap-8 min-w-[180px]">
           <div className="flex flex-col">
-            <span className="text-primary text-4xl font-medium tracking-wide">wpm</span>
-            <span className="text-foreground font-bold text-7xl leading-none font-mono">{finalWpm}</span>
+            <span className="text-primary text-4xl font-medium tracking-wide">
+              wpm
+            </span>
+            <span className="text-foreground font-bold text-7xl leading-none font-mono">
+              {finalWpm}
+            </span>
           </div>
           <div className="flex flex-col">
-            <span className="text-primary text-4xl font-medium tracking-wide">acc</span>
-            <span className="text-foreground font-bold text-7xl leading-none font-mono">{accuracy}%</span>
+            <span className="text-primary text-4xl font-medium tracking-wide">
+              acc
+            </span>
+            <span className="text-foreground font-bold text-7xl leading-none font-mono">
+              {accuracy}%
+            </span>
           </div>
         </div>
 
@@ -127,31 +160,56 @@ export default function ResultScreen() {
 
       {/* Bottom Sub-Stats Row */}
       <div className="flex flex-wrap gap-x-16 gap-y-6 mt-12 justify-start w-full">
-         <div className="flex flex-col">
-            <span className="text-lg text-primary tracking-wide">test type</span>
-            <span className="text-2xl font-bold font-mono text-foreground opacity-90">time {duration}</span>
-         </div>
-         <div className="flex flex-col">
-            <span className="text-lg text-primary tracking-wide">raw</span>
-            <span className="text-2xl font-bold font-mono text-foreground opacity-90">{rawWpm}</span>
-         </div>
-         <div className="flex flex-col">
-            <span className="text-lg text-primary tracking-wide">characters</span>
-            <span className="text-2xl font-bold font-mono text-foreground opacity-90">{correctChars}/{incorrectChars}/0/0</span>
-         </div>
-         <div className="flex flex-col">
-            <span className="text-lg text-primary tracking-wide">time</span>
-            <span className="text-2xl font-bold font-mono text-foreground opacity-90">{duration}s</span>
-         </div>
+        <div className="flex flex-col">
+          <span className="text-lg text-primary tracking-wide">test type</span>
+          <span className="text-2xl font-bold font-mono text-foreground opacity-90">
+            time {duration}
+          </span>
+        </div>
+        <div className="flex flex-col">
+          <span className="text-lg text-primary tracking-wide">raw</span>
+          <span className="text-2xl font-bold font-mono text-foreground opacity-90">
+            {rawWpm}
+          </span>
+        </div>
+        <div className="flex flex-col">
+          <span className="text-lg text-primary tracking-wide">characters</span>
+          <span className="text-2xl font-bold font-mono text-foreground opacity-90">
+            {correctChars}/{incorrectChars}/0/0
+          </span>
+        </div>
+        <div className="flex flex-col">
+          <span className="text-lg text-primary tracking-wide">time</span>
+          <span className="text-2xl font-bold font-mono text-foreground opacity-90">
+            {duration}s
+          </span>
+        </div>
       </div>
 
-      <button
-        onClick={reset}
-        className="flex items-center justify-center p-4 mt-16 rounded-lg text-sub-text hover:text-foreground hover:bg-background/80 transition group focus:outline-none"
-        title="Next Test"
-      >
-        <RotateCcw className="w-8 h-8 group-hover:-rotate-90 transition-transform duration-300" />
-      </button>
+      {/* Restart Controls & Hints */}
+      <div className="w-full flex flex-col items-center mt-12 gap-4 text-sm text-sub-text font-mono opacity-80 select-none">
+        <button
+          onClick={reset}
+          className="hover:text-foreground transition p-4 rounded-full hover:bg-background/50 outline-none focus:bg-background/80 focus:text-foreground"
+          title="Restart Test"
+          tabIndex={1}
+        >
+          <RotateCcw className="w-6 h-6" />
+        </button>
+
+        <div className="flex flex-col items-center gap-2 mt-2 opacity-70">
+          <div className="flex items-center gap-2">
+            <kbd className="bg-card-bg px-2 py-0.5 rounded text-xs">shift</kbd>
+            <span>+</span>
+            <kbd className="bg-card-bg px-2 py-0.5 rounded text-xs">enter</kbd>
+            <span className="ml-2">- restart test</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <kbd className="bg-card-bg px-2 py-0.5 rounded text-xs">esc</kbd>
+            <span className="ml-[10px]">- stop / reset</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

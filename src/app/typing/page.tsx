@@ -20,7 +20,9 @@ export default function Home() {
       <main className="flex w-full flex-col items-center flex-1 py-8 h-full">
         <Header />
         <div className="flex-1 flex flex-col justify-center w-full max-w-4xl pt-16">
-           <div className="animate-pulse flex gap-2 flex-wrap text-sub-text/40 text-2xl h-40">Loading workspace...</div>
+          <div className="animate-pulse flex gap-2 flex-wrap text-sub-text/40 text-2xl h-40">
+            Loading workspace...
+          </div>
         </div>
       </main>
     );

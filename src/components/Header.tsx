@@ -25,7 +25,10 @@ export default function Header({ isLanding = false }: { isLanding?: boolean }) {
 
   return (
     <header className="w-full flex items-center justify-between py-6 text-sub-text">
-      <Link href="/" className="flex items-center gap-2 text-2xl font-bold text-primary cursor-pointer hover:text-foreground transition">
+      <Link
+        href="/"
+        className="flex items-center gap-2 text-2xl font-bold text-primary cursor-pointer hover:text-foreground transition"
+      >
         <Activity className="w-8 h-8" />
         <span className="tracking-tighter">Luff-Everyday</span>
       </Link>
@@ -50,14 +53,20 @@ export default function Header({ isLanding = false }: { isLanding?: boolean }) {
         </Link>
         {session ? (
           <div className="flex items-center gap-4 text-sm font-medium">
-             <span className="text-foreground">{session.user?.name}</span>
-             <button onClick={() => signOut()} className="hover:text-error transition flex items-center gap-2">
-                <LogOut className="w-5 h-5" />
-             </button>
+            <span className="text-foreground">{session.user?.name}</span>
+            <button
+              onClick={() => signOut()}
+              className="hover:text-error transition flex items-center gap-2"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
           </div>
         ) : (
-          <button onClick={() => signIn("google")} className="hover:text-foreground transition flex items-center gap-2">
-              <User className="w-5 h-5" />
+          <button
+            onClick={() => signIn("google")}
+            className="hover:text-foreground transition flex items-center gap-2"
+          >
+            <User className="w-5 h-5" />
           </button>
         )}
       </div>

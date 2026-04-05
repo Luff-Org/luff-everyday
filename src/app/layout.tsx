@@ -17,7 +17,9 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const themeStyles = themes.map(t => `
+  const themeStyles = themes
+    .map(
+      (t) => `
     .${t.id} {
       --background: ${t.bg};
       --foreground: ${t.fg};
@@ -28,7 +30,9 @@ export default function RootLayout({
       --card-bg: ${t.bg};
       --card-border: ${t.sub};
     }
-  `).join('\n');
+  `,
+    )
+    .join("\n");
 
   return (
     <html lang="en">
