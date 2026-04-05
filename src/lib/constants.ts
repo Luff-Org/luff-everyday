@@ -67,7 +67,7 @@ export const APP_FONTS: FontDef[] = [
   { id: "app-comic-neue", name: "Comic Neue", fontString: '"Comic Neue", cursive' },
   { id: "app-pacifico", name: "Pacifico", fontString: '"Pacifico", cursive' },
   { id: "app-bangers", name: "Bangers", fontString: '"Bangers", cursive' },
-  { id: "app-press-start", name: "Start", fontString: '"Press Start 2P", cursive' },
+  { id: "app-press-start", name: "Harsh", fontString: '"Press Start 2P", cursive' },
   { id: "app-bungee", name: "Bungee", fontString: '"Bungee", cursive' },
   { id: "app-righteous", name: "Righteous", fontString: '"Righteous", cursive' },
   { id: "app-monoton", name: "Monoton", fontString: '"Monoton", cursive' },
