@@ -73,7 +73,7 @@ export default function LandingPage() {
         </div>
 
         {/* 3D Mascot Section */}
-        <div className="hidden xl:flex flex-1 relative w-full h-[400px] md:h-[600px] items-center justify-center lg:-mr-12 pointer-events-none mt-8 lg:mt-0">
+        <div className="hidden xl:flex flex-1 relative w-full h-[400px] md:h-[600px] items-center justify-center lg:-mr-12 pointer-events-auto mt-8 lg:mt-0">
           <div className="absolute inset-0 w-full h-full z-10">
              <MascotPlant />
           </div>
