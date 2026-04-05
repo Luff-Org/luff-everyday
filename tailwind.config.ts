@@ -15,6 +15,8 @@ const config: Config = {
         error: "var(--error)",
         correct: "var(--correct)",
         "sub-text": "var(--sub-text)",
+        "card-bg": "var(--card-bg)",
+        "card-border": "var(--card-border)",
       },
     },
   },

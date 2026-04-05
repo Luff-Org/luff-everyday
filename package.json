@@ -1,14 +1,16 @@
 {
-  "name": "typing-test",
-  "version": "0.1.0",
+  "name": "luff-everyday",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
+    "postinstall": "prisma generate",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
+    "@auth/prisma-adapter": "^2.11.1",
     "@prisma/client": "^5.12.0",
     "chart.js": "^4.4.2",
     "clsx": "^2.1.0",
@@ -19,7 +21,6 @@
     "react": "^18",
     "react-chartjs-2": "^5.2.0",
     "react-dom": "^18",
-    "tailwind-merge": "^2.2.2",
     "zustand": "^4.5.2"
   },
   "devDependencies": {
@@ -27,11 +28,8 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10.4.27",
-    "aws-sdk": "^2.1594.0",
     "eslint": "^8",
     "eslint-config-next": "14.2.1",
-    "mock-aws-s3": "^4.0.2",
-    "nock": "^13.5.4",
     "postcss": "^8",
     "prisma": "^5.12.0",
     "tailwindcss": "^3.4.1",
