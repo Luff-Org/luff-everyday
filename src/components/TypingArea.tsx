@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTypingStore } from "@/store/useTypingStore";
 import { clsx } from "clsx";
 import { RotateCcw } from "lucide-react";
 import { LINE_HEIGHT_PX } from "@/lib/constants";
+
+import { Tooltip } from "@/components/ui/Tooltip";
 
 export default function TypingArea() {
   const {
@@ -23,9 +25,15 @@ export default function TypingArea() {
   const containerRef = useRef<HTMLDivElement>(null);
   const activeWordRef = useRef<HTMLDivElement>(null);
   const caretRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Keyboard Event Listener
   useEffect(() => {
+    if (!mounted) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (document.activeElement?.tagName === "BUTTON") {
         if (e.key === "Enter" || e.key === " ") return;
@@ -51,10 +59,11 @@ export default function TypingArea() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [inputChar, deleteChar, inputSpace, reset]);
+  }, [inputChar, deleteChar, inputSpace, reset, mounted]);
 
   // Smooth Caret logic
   useEffect(() => {
+    if (!mounted) return;
     const activeMarker = document.getElementById("caret-marker");
     if (activeMarker && caretRef.current && containerRef.current) {
       const container = containerRef.current;
@@ -66,10 +75,11 @@ export default function TypingArea() {
 
       caretRef.current.style.transform = `translate(${x}px, ${y}px)`;
     }
-  }, [currentWordIndex, currentWordInput, typedWords, originalWords]);
+  }, [currentWordIndex, currentWordInput, typedWords, originalWords, mounted]);
 
   // Scrolling logic
   useEffect(() => {
+    if (!mounted) return;
     if (activeWordRef.current && containerRef.current) {
       const container = containerRef.current;
       const topPos = activeWordRef.current.offsetTop;
@@ -82,7 +92,11 @@ export default function TypingArea() {
         container.scrollTo({ top: 0, behavior: "auto" });
       }
     }
-  }, [currentWordIndex]);
+  }, [currentWordIndex, mounted]);
+
+  if (!mounted) {
+    return <div className="w-full h-[20rem] animate-pulse bg-background/20 rounded-2xl" />;
+  }
 
   return (
     <div className="w-full flex flex-col items-start gap-4">
@@ -225,14 +239,15 @@ export default function TypingArea() {
 
       {/* Restart Controls */}
       <div className="w-full flex flex-col items-center mt-12 gap-4 text-sm text-sub-text font-mono opacity-80 select-none">
-        <button
-          onClick={reset}
-          className="hover:text-foreground transition p-4 rounded-full hover:bg-background/50 outline-none focus:bg-background/80 focus:text-foreground"
-          title="Restart Test"
-          tabIndex={1}
-        >
-          <RotateCcw className="w-6 h-6" />
-        </button>
+        <Tooltip content="Restart Test" position="top">
+          <button
+            onClick={reset}
+            className="hover:text-foreground transition p-4 rounded-full hover:bg-background/50 outline-none focus:bg-background/80 focus:text-foreground"
+            tabIndex={1}
+          >
+            <RotateCcw className="w-6 h-6" />
+          </button>
+        </Tooltip>
 
         <div className="flex flex-col items-center gap-2 mt-2 opacity-70">
           <div className="flex items-center gap-2">

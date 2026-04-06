@@ -22,6 +22,8 @@ export const metadata: Metadata = {
   description: "Minimalist typing tests and productivity tools.",
 };
 
+import { Toaster } from "sonner";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -55,6 +57,16 @@ export default function RootLayout({
               <Header />
               <main className="min-h-[calc(100vh-5rem)]">{children}</main>
             </div>
+            <Toaster
+              position="bottom-right"
+              toastOptions={{
+                style: {
+                  background: "var(--background)",
+                  color: "var(--foreground)",
+                  border: "1px solid var(--card-border)",
+                },
+              }}
+            />
           </Providers>
         </ThemeProvider>
       </body>
