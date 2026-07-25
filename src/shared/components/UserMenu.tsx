@@ -9,15 +9,19 @@ import { UserCircle, Settings, LogOut, ChevronDown } from "lucide-react";
 export function UserMenu({
   name,
   email,
+  image,
 }: {
   name?: string | null;
   email?: string | null;
+  image?: string | null;
 }) {
   const [open, setOpen] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   const displayName = name?.trim() || "Account";
   const initial = displayName.charAt(0).toUpperCase();
+  const showImage = !!image && !imgError;
 
   useEffect(() => {
     if (!open) return;
@@ -41,9 +45,19 @@ export function UserMenu({
         onClick={() => setOpen((v) => !v)}
         className="flex cursor-pointer items-center gap-2 rounded-full py-1 pl-1 pr-2 text-sm font-bold text-foreground/80 transition-all hover:text-foreground"
       >
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm font-black text-primary">
-          {initial}
-        </span>
+        {showImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={image!}
+            alt={displayName}
+            onError={() => setImgError(true)}
+            className="h-8 w-8 shrink-0 rounded-full object-cover"
+          />
+        ) : (
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm font-black text-primary">
+            {initial}
+          </span>
+        )}
         <span className="hidden max-w-[10rem] truncate tracking-tight md:inline">
           {displayName}
         </span>

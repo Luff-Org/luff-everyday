@@ -12,7 +12,11 @@ export default async function ProfilePage() {
   return (
     <div className="w-full flex flex-col items-center pb-20">
       <div className="w-full max-w-3xl mt-8 flex flex-col gap-8">
-        <ProfileHeaderCard name={session.user.name} email={session.user.email} />
+        <ProfileHeaderCard
+          name={session.user.name}
+          email={session.user.email}
+          image={session.user.image}
+        />
 
         {/* Independent Suspense boundaries stream sections concurrently as soon as data resolves */}
         <Suspense fallback={<TypingStatsSkeleton />}>

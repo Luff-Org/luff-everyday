@@ -67,12 +67,14 @@ function AuthSlot({
   status,
   name,
   email,
+  image,
   loginHref,
   variant,
 }: {
   status: "loading" | "authenticated" | "unauthenticated";
   name?: string | null;
   email?: string | null;
+  image?: string | null;
   loginHref: string;
   variant: "mobile" | "desktop";
 }) {
@@ -94,7 +96,7 @@ function AuthSlot({
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.9 }}
         >
-          <UserMenu name={name} email={email} />
+          <UserMenu name={name} email={email} image={image} />
         </motion.div>
       ) : (
         <motion.div
@@ -169,6 +171,7 @@ export default function Header() {
             status={authStatus}
             name={session?.user?.name}
             email={session?.user?.email}
+            image={session?.user?.image}
             loginHref={loginHref}
           />
         </div>
@@ -211,6 +214,7 @@ export default function Header() {
           status={authStatus}
           name={session?.user?.name}
           email={session?.user?.email}
+          image={session?.user?.image}
           loginHref={loginHref}
         />
       </div>
