@@ -58,7 +58,13 @@ function NavIcon({
 }
 
 export default function Header() {
-  const { status, tick, duration, setDuration } = useTypingStore();
+  // Selectors kept per-field (not one destructure) so the tick() calls that
+  // update timeLeft/wpmHistory every second don't re-render this whole header
+  // and repaint the sticky backdrop-blur bar in sync with the countdown.
+  const status = useTypingStore((s) => s.status);
+  const duration = useTypingStore((s) => s.duration);
+  const tick = useTypingStore((s) => s.tick);
+  const setDuration = useTypingStore((s) => s.setDuration);
   const { data: session, status: authStatus } = useSession();
   const pathname = usePathname();
   const mounted = useHasMounted();
@@ -93,7 +99,7 @@ export default function Header() {
   if (!mounted) return <header className="w-full h-20" />;
 
   return (
-    <header className="sticky top-0 z-50 w-full flex flex-col md:flex-row items-center justify-between min-h-[5rem] py-4 px-6 md:py-0 text-sub-text bg-background/80 backdrop-blur-md transition-all duration-300">
+    <header className="sticky top-0 z-50 w-full flex flex-col md:flex-row items-center justify-between min-h-[5rem] py-4 px-6 md:py-0 text-sub-text bg-background">
       <div className="w-full md:w-auto flex items-center justify-between">
         <Link
           href="/"
@@ -137,14 +143,15 @@ export default function Header() {
       </div>
 
       <div className="flex-1 flex justify-center w-full md:w-auto mt-4 md:mt-0">
-        <AnimatePresence mode="wait">
+        <AnimatePresence>
           {isTypingPage && status === "idle" && (
             <motion.div
               key="duration-selector"
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="flex gap-2 sm:gap-4 bg-background/30 backdrop-blur-md p-1 rounded-xl border border-sub-text/10 font-bold text-xs transition text-sub-text shadow-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="flex gap-2 sm:gap-4 p-1 rounded-xl border border-sub-text/10 font-bold text-xs text-sub-text shadow-sm"
             >
               {DURATION_OPTIONS.map((t) => (
                 <button
