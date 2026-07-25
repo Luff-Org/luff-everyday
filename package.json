@@ -8,7 +8,8 @@
     "postinstall": "prisma generate",
     "start": "next start",
     "lint": "eslint .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "smoke": "node --env-file=.env scripts/smoke-api.mjs"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",

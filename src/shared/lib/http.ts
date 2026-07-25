@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { auth } from "@/features/auth";
+import { prisma } from "@/shared/lib/prisma";
 
 /** Error carrying an HTTP status; thrown from services/handlers and mapped by `route`. */
 export class HttpError extends Error {
@@ -17,7 +18,17 @@ export class HttpError extends Error {
 export async function requireUser(): Promise<string> {
   const session = await auth();
   if (!session?.user?.id) throw new HttpError(401, "Unauthorized");
-  return session.user.id;
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { id: true },
+  });
+
+  if (!user) {
+    throw new HttpError(401, "User session invalid or account no longer exists");
+  }
+
+  return user.id;
 }
 
 type RouteHandler<Ctx> = (req: Request, ctx: Ctx) => Promise<unknown>;
@@ -40,6 +51,17 @@ export function route<Ctx = unknown>(handler: RouteHandler<Ctx>) {
         return NextResponse.json(
           { error: "Invalid request", issues: err.flatten() },
           { status: 400 },
+        );
+      }
+      if (
+        typeof err === "object" &&
+        err !== null &&
+        "code" in err &&
+        (err as { code: string }).code === "P2003"
+      ) {
+        return NextResponse.json(
+          { error: "User account no longer exists. Please log in again." },
+          { status: 401 },
         );
       }
       console.error("Unhandled route error", err);

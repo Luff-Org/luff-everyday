@@ -75,6 +75,7 @@ export function UserMenu({
             <nav className="flex flex-col p-1.5">
               <Link
                 href="/profile"
+                prefetch={false}
                 onClick={() => setOpen(false)}
                 className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-bold text-sub-text transition-all hover:bg-primary/10 hover:text-foreground"
               >
@@ -83,6 +84,7 @@ export function UserMenu({
               </Link>
               <Link
                 href="/settings"
+                prefetch={false}
                 onClick={() => setOpen(false)}
                 className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-bold text-sub-text transition-all hover:bg-primary/10 hover:text-foreground"
               >

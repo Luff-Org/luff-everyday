@@ -46,7 +46,7 @@ function NavIcon({
   return (
     <Tooltip content={label} position="bottom">
       {href ? (
-        <Link href={href} className="outline-none">
+        <Link href={href} prefetch={false} className="outline-none">
           {content}
         </Link>
       ) : (
@@ -104,6 +104,7 @@ export default function Header() {
       <div className="w-full md:w-auto flex items-center justify-between">
         <Link
           href="/"
+          prefetch={false}
           className="flex items-center gap-2 text-2xl font-black text-primary cursor-pointer hover:opacity-80 transition-all font-mono"
         >
           <Activity className="w-8 h-8" />

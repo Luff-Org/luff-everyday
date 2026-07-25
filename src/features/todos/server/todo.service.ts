@@ -202,68 +202,83 @@ export const todoService = {
   },
 
   async stats(userId: string): Promise<TodoStats> {
-    const now = new Date();
-    const startOfToday = new Date(now);
-    startOfToday.setHours(0, 0, 0, 0);
-    const endOfToday = new Date(startOfToday);
-    endOfToday.setHours(23, 59, 59, 999);
-    const weekStart = new Date(startOfToday);
-    weekStart.setDate(weekStart.getDate() - 6);
+    try {
+      const now = new Date();
+      const startOfToday = new Date(now);
+      startOfToday.setHours(0, 0, 0, 0);
+      const endOfToday = new Date(startOfToday);
+      endOfToday.setHours(23, 59, 59, 999);
+      const weekStart = new Date(startOfToday);
+      weekStart.setDate(weekStart.getDate() - 6);
 
-    const [byCompleted, byPriorityRows, overdue, dueToday, tagCount, completed] =
-      await Promise.all([
-        todoRepository.countByCompleted(userId),
-        todoRepository.countActiveByPriority(userId),
-        todoRepository.countOverdue(userId, now),
-        todoRepository.countDueBetween(userId, startOfToday, endOfToday),
-        todoRepository.countTags(userId),
-        todoRepository.completedSince(userId, weekStart),
-      ]);
+      const [byCompleted, byPriorityRows, overdue, dueToday, tagCount, completed] =
+        await Promise.all([
+          todoRepository.countByCompleted(userId),
+          todoRepository.countActiveByPriority(userId),
+          todoRepository.countOverdue(userId, now),
+          todoRepository.countDueBetween(userId, startOfToday, endOfToday),
+          todoRepository.countTags(userId),
+          todoRepository.completedSince(userId, weekStart),
+        ]);
 
-    const completedCount =
-      byCompleted.find((r) => r.completed)?._count ?? 0;
-    const activeCount = byCompleted.find((r) => !r.completed)?._count ?? 0;
-    const total = completedCount + activeCount;
+      const completedCount =
+        byCompleted.find((r) => r.completed)?._count ?? 0;
+      const activeCount = byCompleted.find((r) => !r.completed)?._count ?? 0;
+      const total = completedCount + activeCount;
 
-    const byPriority: Record<Priority, number> = {
-      LOW: 0,
-      MEDIUM: 0,
-      HIGH: 0,
-      URGENT: 0,
-    };
-    for (const row of byPriorityRows) byPriority[row.priority] = row._count;
+      const byPriority: Record<Priority, number> = {
+        LOW: 0,
+        MEDIUM: 0,
+        HIGH: 0,
+        URGENT: 0,
+      };
+      for (const row of byPriorityRows) byPriority[row.priority] = row._count;
 
-    // 7 day buckets (oldest first), keyed by local YYYY-MM-DD.
-    const dayKey = (d: Date) =>
-      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
-        d.getDate(),
-      ).padStart(2, "0")}`;
-    const buckets = new Map<string, number>();
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(weekStart);
-      d.setDate(d.getDate() + i);
-      buckets.set(dayKey(d), 0);
+      // 7 day buckets (oldest first), keyed by local YYYY-MM-DD.
+      const dayKey = (d: Date) =>
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
+          d.getDate(),
+        ).padStart(2, "0")}`;
+      const buckets = new Map<string, number>();
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(weekStart);
+        d.setDate(d.getDate() + i);
+        buckets.set(dayKey(d), 0);
+      }
+      for (const { completedAt } of completed) {
+        if (!completedAt) continue;
+        const key = dayKey(new Date(completedAt));
+        if (buckets.has(key)) buckets.set(key, (buckets.get(key) ?? 0) + 1);
+      }
+
+      return {
+        total,
+        active: activeCount,
+        completed: completedCount,
+        completionRate: total > 0 ? Math.round((completedCount / total) * 100) : 0,
+        overdue,
+        dueToday,
+        tagCount,
+        byPriority,
+        completedLast7Days: Array.from(buckets, ([date, count]) => ({
+          date,
+          count,
+        })),
+      };
+    } catch (error) {
+      console.error("Failed to fetch todo stats:", error);
+      return {
+        total: 0,
+        active: 0,
+        completed: 0,
+        completionRate: 0,
+        overdue: 0,
+        dueToday: 0,
+        tagCount: 0,
+        byPriority: { LOW: 0, MEDIUM: 0, HIGH: 0, URGENT: 0 },
+        completedLast7Days: [],
+      };
     }
-    for (const { completedAt } of completed) {
-      if (!completedAt) continue;
-      const key = dayKey(new Date(completedAt));
-      if (buckets.has(key)) buckets.set(key, (buckets.get(key) ?? 0) + 1);
-    }
-
-    return {
-      total,
-      active: activeCount,
-      completed: completedCount,
-      completionRate: total > 0 ? Math.round((completedCount / total) * 100) : 0,
-      overdue,
-      dueToday,
-      tagCount,
-      byPriority,
-      completedLast7Days: Array.from(buckets, ([date, count]) => ({
-        date,
-        count,
-      })),
-    };
   },
 
   // ── Tags ──
