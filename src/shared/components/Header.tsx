@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTypingStore } from "@/features/typing/store/useTypingStore";
-import { Activity, ListTodo, LogOut, Settings, User } from "lucide-react";
-import { useSession, signOut } from "next-auth/react";
+import { Activity, ListTodo, User } from "lucide-react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { DURATION_OPTIONS } from "@/features/typing/lib/constants";
@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 
 import { Tooltip } from "@/shared/ui/Tooltip";
+import { UserMenu } from "@/shared/components/UserMenu";
 
 function NavIcon({
   href,
@@ -45,7 +46,7 @@ function NavIcon({
   return (
     <Tooltip content={label} position="bottom">
       {href ? (
-        <Link href={href} className="outline-none">
+        <Link href={href} prefetch={false} className="outline-none">
           {content}
         </Link>
       ) : (
@@ -103,6 +104,7 @@ export default function Header() {
       <div className="w-full md:w-auto flex items-center justify-between">
         <Link
           href="/"
+          prefetch={false}
           className="flex items-center gap-2 text-2xl font-black text-primary cursor-pointer hover:opacity-80 transition-all font-mono"
         >
           <Activity className="w-8 h-8" />
@@ -112,7 +114,6 @@ export default function Header() {
         {/* Mobile controls */}
         <div className="md:hidden flex items-center gap-4">
           <NavIcon href="/todos" icon={ListTodo} label="Todos" />
-          <NavIcon href="/settings" icon={Settings} label="Settings" />
           <AnimatePresence mode="wait">
             {session ? (
               <motion.div
@@ -121,12 +122,7 @@ export default function Header() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
               >
-                <NavIcon
-                  onClick={() => signOut()}
-                  icon={LogOut}
-                  label="Log Out"
-                  className="hover:text-error"
-                />
+                <UserMenu name={session.user?.name} email={session.user?.email} />
               </motion.div>
             ) : (
               <motion.div
@@ -174,7 +170,6 @@ export default function Header() {
       {/* Desktop controls */}
       <div className="hidden md:flex items-center gap-6">
         <NavIcon href="/todos" icon={ListTodo} label="Todos" />
-        <NavIcon href="/settings" icon={Settings} label="Settings" />
         <AnimatePresence mode="wait">
           {session ? (
             <motion.div
@@ -182,17 +177,8 @@ export default function Header() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="flex items-center gap-6 text-sm font-bold"
             >
-              <span className="text-foreground/80 tracking-tight cursor-default">
-                {session.user?.name}
-              </span>
-              <NavIcon
-                onClick={() => signOut()}
-                icon={LogOut}
-                label="Log Out"
-                className="hover:text-error"
-              />
+              <UserMenu name={session.user?.name} email={session.user?.email} />
             </motion.div>
           ) : (
             <motion.div

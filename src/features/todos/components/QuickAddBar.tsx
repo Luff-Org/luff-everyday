@@ -102,7 +102,6 @@ export function QuickAddBar() {
           <select
             value={manualPriority}
             onChange={(e) => setManualPriority(e.target.value as Priority | "")}
-            style={{ colorScheme: "dark" }}
             className={`${fieldClass} cursor-pointer`}
           >
             <option value="">Auto</option>

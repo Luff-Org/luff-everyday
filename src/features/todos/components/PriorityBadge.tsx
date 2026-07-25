@@ -28,7 +28,6 @@ export function PriorityBadge({ priority, onChange }: PriorityBadgeProps) {
       value={priority}
       onClick={(e) => e.stopPropagation()}
       onChange={(e) => onChange(e.target.value as Priority)}
-      style={{ colorScheme: "dark" }}
       className={`${className} border-none outline-none cursor-pointer appearance-none`}
     >
       {PRIORITIES.map((p) => (

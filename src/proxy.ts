@@ -4,7 +4,7 @@ import { authConfig } from "@/features/auth/config";
 
 const { auth } = NextAuth(authConfig);
 
-const PROTECTED_PREFIXES = ["/todos"];
+const PROTECTED_PREFIXES = ["/todos", "/profile"];
 
 export default auth((req) => {
   const { nextUrl } = req;
@@ -20,5 +20,5 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ["/todos/:path*"],
+  matcher: ["/todos/:path*", "/profile/:path*"],
 };

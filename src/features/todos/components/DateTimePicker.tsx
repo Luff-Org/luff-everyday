@@ -77,6 +77,9 @@ export function DateTimePicker({
     };
   }, [open]);
 
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
   const handleSelectDate = (date: Date | undefined) => {
     if (!date) return;
     const time = value ? toTimeString(value) : "09:00";
@@ -137,6 +140,7 @@ export function DateTimePicker({
               mode="single"
               selected={value ?? undefined}
               onSelect={handleSelectDate}
+              disabled={{ before: today }}
               showOutsideDays
               components={{
                 Chevron: ({ orientation }) =>
@@ -155,7 +159,6 @@ export function DateTimePicker({
                 type="time"
                 value={value ? toTimeString(value) : "09:00"}
                 onChange={(e) => handleTimeChange(e.target.value)}
-                style={{ colorScheme: "dark" }}
                 className="flex-1 bg-background/40 border border-sub-text/20 rounded-lg px-2 py-1 text-xs font-bold text-foreground outline-none focus:border-primary/50"
               />
             </div>

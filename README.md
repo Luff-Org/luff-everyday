@@ -7,7 +7,7 @@
 > A minimalist productivity workspace that turns discipline into delight.
 > Type faster. Think clearer. Stay focused.
 
-**[✨ Live Demo →](https://luff-everyday.vercel.app/)** &nbsp;|&nbsp; **[🐛 Report Bug](https://github.com/Luff-Org/luff-everyday/issues)** &nbsp;|&nbsp; **[💡 Request Feature](https://github.com/Luff-Org/luff-everyday/issues)**
+**[✨ Live Demo →](https://luff-everyday.vercel.app/)** &nbsp;|&nbsp; **[📚 Docs](docs/README.md)** &nbsp;|&nbsp; **[🐛 Report Bug](https://github.com/Luff-Org/luff-everyday/issues)** &nbsp;|&nbsp; **[💡 Request Feature](https://github.com/Luff-Org/luff-everyday/issues)**
 
 </div>
 
@@ -23,7 +23,7 @@
 
 ## 🧠 Why luff?
 
-Most productivity tools feel like work. **luff.** flips the script — it's a workspace you *want* to open. With an interactive 3D mascot that follows your eyes, 31 handcrafted color themes, and a typing engine built for flow state, it's productivity wrapped in personality.
+Most productivity tools feel like work. **luff.** flips the script — it's a workspace you *want* to open. With an interactive 3D mascot that follows your eyes, 32 handcrafted color themes, and a typing engine built for flow state, it's productivity wrapped in personality.
 
 **This isn't another boring tool. This is your new daily ritual.**
 
@@ -57,7 +57,7 @@ Most productivity tools feel like work. **luff.** flips the script — it's a wo
 <td width="50%">
 
 ### 🎨 Deep Customization
-- **31 aesthetic themes** — *Nord*, *Dracula*, *Vaporwave*, *Matrix*, and more
+- **32 aesthetic themes** — *Nord*, *Dracula*, *Vaporwave*, *Matrix*, and more
 - **20 font families** — Modern sans-serifs, classic serifs, playful displays
 - **Dynamic branding** — Favicon, UI, and mascot adapt to your palette
 - **Persistent settings** — Your preferences saved locally
@@ -73,6 +73,26 @@ Most productivity tools feel like work. **luff.** flips the script — it's a wo
 
 </td>
 </tr>
+<tr>
+<td width="50%">
+
+### ✅ Smart Todos
+- **Quick add** — `write docs tomorrow !high #docs` parses date, priority, tags
+- **Task detail** — Notes, estimates, energy level, context, location, links
+- **Blockers** — Task dependencies with cycle detection and a completion gate
+- **Recurrence** — Daily/weekly/monthly tasks that respawn on completion
+
+</td>
+<td width="50%">
+
+### 👤 Profile Dashboard
+- **Typing stats** — Best/average WPM, accuracy, best per test duration
+- **Todo stats** — Completion rate, overdue, due today, breakdown by priority
+- **7-day activity** — Completions per day, zero-filled
+- **Streamed** — Server-rendered shell, panels stream in as queries resolve
+
+</td>
+</tr>
 </table>
 
 ---
@@ -80,14 +100,16 @@ Most productivity tools feel like work. **luff.** flips the script — it's a wo
 ## 🛠️ Tech Stack
 
 ```
-Frontend:   Next.js 14 (App Router) + TypeScript
+Frontend:   Next.js 16 (App Router) + React 19 + TypeScript
 3D Engine:  React Three Fiber + Three.js + @react-three/drei
 State:      Zustand (with localStorage persistence)
 Styling:    Tailwind CSS + Framer Motion
-Database:   PostgreSQL + Prisma ORM
-Auth:       NextAuth.js (Google OAuth 2.0)
+Database:   PostgreSQL (Neon) + Prisma ORM
+Auth:       NextAuth v5 / Auth.js (Google OAuth 2.0 + credentials)
+Validation: Zod
 Charts:     Chart.js
 Icons:      Lucide React
+Tests:      Vitest
 Deploy:     Vercel
 ```
 
@@ -96,7 +118,7 @@ Deploy:     Vercel
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js 18+
+- Node.js 20+
 - PostgreSQL database
 - Google OAuth credentials
 
@@ -109,25 +131,33 @@ npm install
 
 ### 2. Configure Environment
 ```env
-# .env
-DATABASE_URL="postgresql://..."
-GOOGLE_CLIENT_ID="..."
-GOOGLE_CLIENT_SECRET="..."
+# .env  (copy from .env.example)
+DATABASE_URL="postgresql://user:pw@host-pooler/db?sslmode=require"   # pooled, runtime
+DIRECT_URL="postgresql://user:pw@host/db?sslmode=require"            # unpooled, migrations
 NEXTAUTH_URL="http://localhost:3000"
 NEXTAUTH_SECRET="..."
+GOOGLE_CLIENT_ID="..."        # optional — credentials login works without it
+GOOGLE_CLIENT_SECRET="..."
 ```
 
 ### 3. Initialize Database
 ```bash
-npx prisma generate
-npx prisma db push
+npx prisma migrate deploy   # apply the migration baseline
 ```
+`prisma generate` already ran via `postinstall`. Never use `db push` here — this repo has a
+migration history. See **[docs/database.md](docs/database.md)**.
 
 ### 4. Run
 ```bash
 npm run dev
 ```
 Open **[localhost:3000](http://localhost:3000)** and start typing.
+
+### 5. Verify
+```bash
+npm test && npm run lint && npm run build
+npm run smoke      # end-to-end API check against the running dev server
+```
 
 ---
 
@@ -144,10 +174,10 @@ Open **[localhost:3000](http://localhost:3000)** and start typing.
 
 ## 🎨 Theme Gallery
 
-> 31 themes, from sleek dark modes to vibrant neon aesthetics.
+> 32 themes, from sleek dark modes to vibrant neon aesthetics.
 > Every element — from the cat mascot to the favicon — adapts instantly.
 
-Some favorites: **Matrix** · **Nord** · **Dracula** · **Catppuccin** · **Vaporwave** · **Solarized** · **Tokyo Night** · **Gruvbox**
+Some favorites: **Matrix** · **Nord** · **Dracula** · **Monokai** · **Vaporwave** · **Gruvbox** · **Superuser** · **Red Samurai**
 
 ---
 
@@ -166,19 +196,47 @@ Built entirely with procedural Three.js geometry — no external 3D models neede
 
 ## 📁 Project Structure
 
+Feature-based: `src/app` is routing only, features own their components/state/server code.
+
 ```
 src/
-├── app/              # Next.js App Router pages
-│   ├── page.tsx      # Landing page with 3D mascot
-│   ├── typing/       # Typing test engine
-│   └── settings/     # Theme & font customization
-├── components/
-│   ├── 3d/           # Three.js mascot components
-│   ├── Header.tsx    # Dynamic header with auth
-│   └── ...           # UI components
-├── store/            # Zustand state management
-└── lib/              # Constants, themes, utilities
+├── app/                 # Next.js App Router — thin pages + API routes
+│   ├── page.tsx         #   landing page with 3D mascot
+│   ├── typing/ todos/ profile/ settings/ login/
+│   └── api/             #   route handlers: validate → service → respond
+├── features/
+│   ├── typing/          # engine store, metrics, words, server (repo+service)
+│   ├── todos/           # store, api client, server, validation, types, lib
+│   ├── profile/         # dashboard + panels + charts
+│   └── auth/            # NextAuth instance, edge-safe config, register service
+├── shared/
+│   ├── components/      # Header, UserMenu, Providers, ThemeProvider, 3d/
+│   ├── ui/              # generic presentational
+│   ├── store/           # theme + font (localStorage-persisted)
+│   └── lib/             # prisma, http helpers, constants, hooks
+└── proxy.ts             # middleware (Next 16 naming) — guards /todos, /profile
+docs/                    # architecture, data model, API contracts, …
+prisma/                  # schema.prisma + migrations
+scripts/smoke-api.mjs    # end-to-end API smoke test
 ```
+
+Details: **[docs/architecture.md](docs/architecture.md)**.
+
+---
+
+## 📚 Documentation
+
+| Page | Contents |
+| :--- | :--- |
+| [docs/architecture.md](docs/architecture.md) | Layering rules, request lifecycle, import boundaries |
+| [docs/data-model.md](docs/data-model.md) | ER diagram, every table/column/index/cascade |
+| [docs/api-contracts.md](docs/api-contracts.md) | Every endpoint: schema, responses, status codes |
+| [docs/auth.md](docs/auth.md) | NextAuth v5 setup, providers, guarding |
+| [docs/frontend.md](docs/frontend.md) | Pages, stores, optimistic updates, theming |
+| [docs/database.md](docs/database.md) | Migrations, reset, Neon troubleshooting |
+| [docs/development.md](docs/development.md) | Setup, conventions, adding a feature |
+| [docs/testing.md](docs/testing.md) | Unit suite + smoke test |
+| [docs/features/](docs/features/) | Per-feature domain rules |
 
 ---
 

@@ -1,0 +1,72 @@
+# Changelog
+
+Notable schema, API and infrastructure changes. Newest first. Feature-level detail lives in the
+`docs/features/*` pages; this file records what changed and what it broke.
+
+## 2026-07-25 — Database rebuild, task detail fields, profile dashboard, docs
+
+### Database rebuilt from scratch (breaking)
+
+Every table was dropped and the migration history squashed. The three previous migrations
+(`20260725061326_add_todos`, `20260725063738_add_credentials_auth`,
+`20260725070000_add_task_detail_fields`) were deleted and replaced by a single baseline,
+`20260725124525_init`, generated from the current `prisma/schema.prisma`.
+
+- All existing rows were destroyed (the database held 1 user, 1 todo, 1 tag, 2 test results).
+- `migration_lock.toml` is now tracked, so `prisma migrate` no longer regenerates it.
+- Any other environment pointed at its own database must run `npx prisma migrate reset` (dev) —
+  `migrate deploy` cannot reconcile a history that was rewritten.
+- Procedure documented in [database.md](database.md#full-reset-drops-all-data).
+
+### Schema additions (in the new baseline)
+
+Beyond the previously migrated tables:
+
+- `Todo`: `notes` (`@db.Text`), `startDate`, `estimatedMinutes`, `energyLevel`, `context`,
+  `location`, `recurrence`, `recurringParentId`.
+- New enums `RecurrenceRule`, `EnergyLevel`.
+- New table `TodoLink` — attached reference URLs, ordered, cascade on todo delete.
+- New table `TodoDependency` — self-relation join (`blockedId`, `blockingId`) for task blockers,
+  composite PK, index on `blockingId`.
+- Index `Todo(userId, completed, dueDate)`.
+
+### API additions
+
+- `GET /api/profile` — combined todo + typing stats for the dashboard.
+- `PATCH /api/todos/{id}` accepts `notes`, `startDate`, `estimatedMinutes`, `energyLevel`,
+  `context`, `location`, `recurrence`, `links`, `dependsOn`.
+- `POST /api/todos` accepts the same detail fields plus `links`.
+- `POST /api/todos/{id}/complete` now returns `{ completed, next }` and 409s when a blocker is
+  unfinished; previously it always completed.
+- New error cases: 400 `Unknown blocker task`, 409 `That would create a circular dependency`,
+  409 `Blocked by N unfinished task(s)`.
+
+### Fixes
+
+- `todoRepository.completeWithRecurrence` ran its interactive transaction on Prisma's 5s
+  default. Three sequential round trips (one with nested creates) against a pooled remote
+  Postgres overran it, producing intermittent 500s when completing a recurring todo. Now
+  `{ maxWait: 10s, timeout: 20s }`.
+
+### Tooling
+
+- `scripts/smoke-api.mjs` + `npm run smoke` — end-to-end API smoke test (37 checks) that
+  registers a throwaway user, exercises every route, and cleans up after itself.
+- `docs/` — this documentation set.
+
+## Earlier
+
+Recovered from git history; these landed before the docs existed.
+
+- **Optimistic id race guard** (`3afcb1f`) — store actions reject `temp-` ids with an info toast
+  instead of firing requests against ids the server has never seen.
+- **Header re-render fix** (`bf2ebd6`) — granular Zustand selectors instead of whole-store
+  subscriptions; removed unnecessary `backdrop-blur`.
+- **Feature-based architecture** (PR #3) — moved from `components/`+`lib/`+`store/` to
+  `src/features/*` + `src/shared/*`; introduced `route()`/`requireUser()`, the
+  service/repository split, and Prisma-derived types.
+- **Credentials auth** — `User.username` + `User.password` (bcrypt), `POST /api/auth/register`,
+  login page sign-in/sign-up toggle.
+- **Todos feature** — `Todo`, `Subtask`, `Tag`, `TodoTag`; quick-add parsing, urgency sorting,
+  optimistic store.
+- **Typing test** — engine, metrics, `TestResult` persistence, Google OAuth.

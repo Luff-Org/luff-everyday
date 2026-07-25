@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect, useState } from "react";
 import { useFrame, Canvas } from "@react-three/fiber";
-import { Environment, ContactShadows } from "@react-three/drei";
+import { ContactShadows } from "@react-three/drei";
 import * as THREE from "three";
 import { useThemeStore } from "@/shared/store/useThemeStore";
 import { THEMES } from "@/shared/lib/constants";
@@ -63,12 +63,14 @@ function Ears({ color }: { color: string }) {
  */
 function Whiskers({ color }: { color: string }) {
   const groupRef = useRef<THREE.Group>(null);
+  const elapsedTime = useRef(0);
   const yPositions = [0.12, 0, -0.12];
   const spread = [0.15, 0, -0.15];
 
-  useFrame((state) => {
+  useFrame((_, delta) => {
     if (!groupRef.current) return;
-    const t = state.clock.getElapsedTime();
+    elapsedTime.current += delta;
+    const t = elapsedTime.current;
     const twitch =
       Math.sin(t * 12) * 0.015 * (Math.sin(t * 0.4) > 0.85 ? 1 : 0);
     groupRef.current.children.forEach((child, i) => {
@@ -130,9 +132,11 @@ function Character({
   const rightPupil = useRef<THREE.Mesh>(null);
   const blinkState = useRef({ nextBlink: 0, blinking: false });
   const hitProgress = useRef(0);
+  const elapsedTime = useRef(0);
 
   useFrame((state, delta) => {
-    const t = state.clock.getElapsedTime();
+    elapsedTime.current += delta;
+    const t = elapsedTime.current;
 
     if (group.current) {
       // Base floating animation
@@ -329,7 +333,7 @@ export default function MascotPlant() {
 
   return (
     <div className="w-full h-full min-h-[500px]">
-      <Canvas shadows camera={{ position: [0, 1.2, 5], fov: 40 }}>
+      <Canvas shadows={{ type: THREE.PCFShadowMap }} camera={{ position: [0, 1.2, 5], fov: 40 }}>
         <ambientLight intensity={0.7} />
         <spotLight
           position={[10, 10, 10]}
@@ -339,6 +343,7 @@ export default function MascotPlant() {
           castShadow
         />
         <pointLight position={[-10, -10, -10]} intensity={0.5} />
+        <hemisphereLight args={["#ffffff", "#444444", 0.6]} />
 
         <Character mouse={mouse} />
 
@@ -349,8 +354,6 @@ export default function MascotPlant() {
           blur={2.5}
           far={4}
         />
-
-        <Environment preset="city" />
       </Canvas>
     </div>
   );

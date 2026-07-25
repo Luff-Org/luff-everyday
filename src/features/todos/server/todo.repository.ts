@@ -54,6 +54,52 @@ export const todoRepository = {
     return prisma.todoTag.deleteMany({ where: { todoId } });
   },
 
+  /** Replaces all attached links for a todo. */
+  setLinks(todoId: string, links: { url: string; title?: string | null }[]) {
+    return prisma.$transaction([
+      prisma.todoLink.deleteMany({ where: { todoId } }),
+      prisma.todoLink.createMany({
+        data: links.map((l, i) => ({
+          todoId,
+          url: l.url,
+          title: l.title ?? null,
+          order: i,
+        })),
+      }),
+    ]);
+  },
+
+  /** Replaces the set of tasks a todo waits on (blockers). */
+  setDependencies(blockedId: string, blockingIds: string[]) {
+    return prisma.$transaction([
+      prisma.todoDependency.deleteMany({ where: { blockedId } }),
+      prisma.todoDependency.createMany({
+        data: blockingIds.map((blockingId) => ({ blockedId, blockingId })),
+      }),
+    ]);
+  },
+
+  /** How many of the given ids are todos owned by this user. */
+  countOwnedIn(userId: string, ids: string[]) {
+    return prisma.todo.count({ where: { userId, id: { in: ids } } });
+  },
+
+  /** All dependency edges across the user's todos — for in-memory cycle checks. */
+  listDependencyEdges(userId: string) {
+    return prisma.todoDependency.findMany({
+      where: { blocked: { userId } },
+      select: { blockedId: true, blockingId: true },
+    });
+  },
+
+  /** Blockers of a todo that are still incomplete (gate completion). */
+  incompleteBlockers(todoId: string) {
+    return prisma.todo.findMany({
+      where: { blocking: { some: { blockedId: todoId } }, completed: false },
+      select: { id: true, title: true },
+    });
+  },
+
   delete(id: string) {
     return prisma.todo.delete({ where: { id } });
   },
@@ -74,44 +120,94 @@ export const todoRepository = {
    * (cloning subtasks + tags) atomically.
    */
   completeWithRecurrence(id: string, userId: string) {
-    return prisma.$transaction(async (tx) => {
-      const existing = await tx.todo.findFirst({
-        where: { id, userId },
-        include: { subtasks: true, tags: true },
-      });
-      if (!existing) return null;
+    return prisma.$transaction(
+      async (tx) => {
+        const existing = await tx.todo.findFirst({
+          where: { id, userId },
+          include: { subtasks: true, tags: true },
+        });
+        if (!existing) return null;
 
-      const completed = await tx.todo.update({
-        where: { id },
-        data: { completed: true, completedAt: new Date() },
-        include: TODO_INCLUDE,
-      });
+        const completed = await tx.todo.update({
+          where: { id },
+          data: { completed: true, completedAt: new Date() },
+          include: TODO_INCLUDE,
+        });
 
-      if (existing.recurrence === "NONE") return { completed, next: null };
+        if (existing.recurrence === "NONE") return { completed, next: null };
 
-      const dueDate = nextDueDate(existing.dueDate ?? new Date(), existing.recurrence);
-      const next = await tx.todo.create({
-        data: {
-          title: existing.title,
-          description: existing.description,
-          priority: existing.priority,
-          dueDate,
-          recurrence: existing.recurrence,
-          recurringParentId: existing.id,
-          userId,
-          subtasks: {
-            create: existing.subtasks.map((s) => ({
-              title: s.title,
-              completed: false,
-              order: s.order,
-            })),
+        const dueDate = nextDueDate(existing.dueDate ?? new Date(), existing.recurrence);
+        const next = await tx.todo.create({
+          data: {
+            title: existing.title,
+            description: existing.description,
+            notes: existing.notes,
+            priority: existing.priority,
+            dueDate,
+            estimatedMinutes: existing.estimatedMinutes,
+            energyLevel: existing.energyLevel,
+            context: existing.context,
+            location: existing.location,
+            recurrence: existing.recurrence,
+            recurringParentId: existing.id,
+            userId,
+            subtasks: {
+              create: existing.subtasks.map((s) => ({
+                title: s.title,
+                completed: false,
+                order: s.order,
+              })),
+            },
+            tags: { create: existing.tags.map((t) => ({ tagId: t.tagId })) },
           },
-          tags: { create: existing.tags.map((t) => ({ tagId: t.tagId })) },
-        },
-        include: TODO_INCLUDE,
-      });
+          include: TODO_INCLUDE,
+        });
 
-      return { completed, next };
+        return { completed, next };
+      },
+      // Three sequential round trips (one with nested creates) against a pooled remote
+      // Postgres overrun Prisma's 5s interactive-transaction default on a cold pool.
+      { maxWait: 10_000, timeout: 20_000 },
+    );
+  },
+
+  // ── Stats ──
+  countByCompleted(userId: string) {
+    return prisma.todo.groupBy({
+      by: ["completed"],
+      where: { userId },
+      _count: true,
+    });
+  },
+
+  countActiveByPriority(userId: string) {
+    return prisma.todo.groupBy({
+      by: ["priority"],
+      where: { userId, completed: false },
+      _count: true,
+    });
+  },
+
+  countOverdue(userId: string, now: Date) {
+    return prisma.todo.count({
+      where: { userId, completed: false, dueDate: { lt: now } },
+    });
+  },
+
+  countDueBetween(userId: string, start: Date, end: Date) {
+    return prisma.todo.count({
+      where: { userId, completed: false, dueDate: { gte: start, lte: end } },
+    });
+  },
+
+  countTags(userId: string) {
+    return prisma.tag.count({ where: { userId } });
+  },
+
+  completedSince(userId: string, since: Date) {
+    return prisma.todo.findMany({
+      where: { userId, completed: true, completedAt: { gte: since } },
+      select: { completedAt: true },
     });
   },
 
