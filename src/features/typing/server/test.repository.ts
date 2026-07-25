@@ -43,4 +43,20 @@ export const testRepository = {
       })
       .then((rows) => rows.reverse());
   },
+
+  /** Fetches all test results for a user to calculate stats efficiently in memory. */
+  listForStats(userId: string) {
+    return prisma.testResult.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        wpm: true,
+        rawWpm: true,
+        accuracy: true,
+        duration: true,
+        createdAt: true,
+      },
+    });
+  },
 };

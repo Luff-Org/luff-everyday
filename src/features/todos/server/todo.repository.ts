@@ -172,43 +172,19 @@ export const todoRepository = {
   },
 
   // ── Stats ──
-  countByCompleted(userId: string) {
-    return prisma.todo.groupBy({
-      by: ["completed"],
-      where: { userId },
-      _count: true,
-    });
-  },
-
-  countActiveByPriority(userId: string) {
-    return prisma.todo.groupBy({
-      by: ["priority"],
-      where: { userId, completed: false },
-      _count: true,
-    });
-  },
-
-  countOverdue(userId: string, now: Date) {
-    return prisma.todo.count({
-      where: { userId, completed: false, dueDate: { lt: now } },
-    });
-  },
-
-  countDueBetween(userId: string, start: Date, end: Date) {
-    return prisma.todo.count({
-      where: { userId, completed: false, dueDate: { gte: start, lte: end } },
-    });
-  },
-
-  countTags(userId: string) {
-    return prisma.tag.count({ where: { userId } });
-  },
-
-  completedSince(userId: string, since: Date) {
-    return prisma.todo.findMany({
-      where: { userId, completed: true, completedAt: { gte: since } },
-      select: { completedAt: true },
-    });
+  listForStats(userId: string) {
+    return Promise.all([
+      prisma.todo.findMany({
+        where: { userId },
+        select: {
+          completed: true,
+          priority: true,
+          dueDate: true,
+          completedAt: true,
+        },
+      }),
+      prisma.tag.count({ where: { userId } }),
+    ]);
   },
 
   // ── Tags ──

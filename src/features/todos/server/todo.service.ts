@@ -211,30 +211,19 @@ export const todoService = {
       const weekStart = new Date(startOfToday);
       weekStart.setDate(weekStart.getDate() - 6);
 
-      const [byCompleted, byPriorityRows, overdue, dueToday, tagCount, completed] =
-        await Promise.all([
-          todoRepository.countByCompleted(userId),
-          todoRepository.countActiveByPriority(userId),
-          todoRepository.countOverdue(userId, now),
-          todoRepository.countDueBetween(userId, startOfToday, endOfToday),
-          todoRepository.countTags(userId),
-          todoRepository.completedSince(userId, weekStart),
-        ]);
+      const [todos, tagCount] = await todoRepository.listForStats(userId);
 
-      const completedCount =
-        byCompleted.find((r) => r.completed)?._count ?? 0;
-      const activeCount = byCompleted.find((r) => !r.completed)?._count ?? 0;
-      const total = completedCount + activeCount;
-
+      let completedCount = 0;
+      let activeCount = 0;
+      let overdue = 0;
+      let dueToday = 0;
       const byPriority: Record<Priority, number> = {
         LOW: 0,
         MEDIUM: 0,
         HIGH: 0,
         URGENT: 0,
       };
-      for (const row of byPriorityRows) byPriority[row.priority] = row._count;
 
-      // 7 day buckets (oldest first), keyed by local YYYY-MM-DD.
       const dayKey = (d: Date) =>
         `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
           d.getDate(),
@@ -245,11 +234,28 @@ export const todoService = {
         d.setDate(d.getDate() + i);
         buckets.set(dayKey(d), 0);
       }
-      for (const { completedAt } of completed) {
-        if (!completedAt) continue;
-        const key = dayKey(new Date(completedAt));
-        if (buckets.has(key)) buckets.set(key, (buckets.get(key) ?? 0) + 1);
+
+      for (const t of todos) {
+        if (t.completed) {
+          completedCount++;
+          if (t.completedAt) {
+            const key = dayKey(new Date(t.completedAt));
+            if (buckets.has(key)) {
+              buckets.set(key, (buckets.get(key) ?? 0) + 1);
+            }
+          }
+        } else {
+          activeCount++;
+          byPriority[t.priority] = (byPriority[t.priority] ?? 0) + 1;
+          if (t.dueDate) {
+            const due = new Date(t.dueDate);
+            if (due < now) overdue++;
+            if (due >= startOfToday && due <= endOfToday) dueToday++;
+          }
+        }
       }
+
+      const total = completedCount + activeCount;
 
       return {
         total,

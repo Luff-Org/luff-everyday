@@ -25,6 +25,7 @@ model Account {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@index([userId])
 }
 
 model Session {
@@ -33,6 +34,8 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model User {
@@ -68,6 +71,8 @@ model TestResult {
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }
 
 enum Priority {
@@ -121,6 +126,8 @@ model Todo {
   blocking  TodoDependency[] @relation("BlockingTask") // tasks waiting on this one
 
   @@index([userId, completed, dueDate])
+  @@index([userId, completed, completedAt])
+  @@index([userId, createdAt])
 }
 
 model TodoLink {
@@ -155,6 +162,8 @@ model Subtask {
 
   todoId String
   todo   Todo   @relation(fields: [todoId], references: [id], onDelete: Cascade)
+
+  @@index([todoId])
 }
 
 model Tag {

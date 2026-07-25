@@ -6,11 +6,13 @@ import { useTodoStore } from "@/features/todos/store/useTodoStore";
 import { getBucket, sortByUrgency } from "@/features/todos/lib/todoSort";
 import { TodoItem } from "./TodoItem";
 import { EmptyState } from "./EmptyState";
+import { TodoSkeletonList } from "@/app/todos/loading";
 
 export function TodoList() {
   const todos = useTodoStore((s) => s.todos);
   const filter = useTodoStore((s) => s.filter);
   const tagFilter = useTodoStore((s) => s.tagFilter);
+  const isLoading = useTodoStore((s) => s.isLoading);
 
   const filtered = useMemo(() => {
     let result = todos;
@@ -38,6 +40,10 @@ export function TodoList() {
 
     return sortByUrgency(result);
   }, [todos, filter, tagFilter]);
+
+  if (isLoading && todos.length === 0) {
+    return <TodoSkeletonList />;
+  }
 
   if (filtered.length === 0) {
     return <EmptyState filter={filter} />;
