@@ -44,6 +44,8 @@ guards page routes only — `/api/*` relies on `requireUser()`.
 | DELETE | `/api/todos/{id}/subtasks/{subtaskId}` | ✅ | Delete a subtask |
 | POST | `/api/tests` | ✅ | Save a typing-test result |
 | GET | `/api/profile` | ✅ | Combined todo + typing stats |
+| PATCH | `/api/profile` | ✅ | Update the account's name/avatar image |
+| POST | `/api/upload` | ✅ | Upload an image to Cloudinary (generic, feature-agnostic) |
 
 ---
 
@@ -391,7 +393,63 @@ Semantics:
 
 Empty account: zeros throughout, `bestByDuration: []`, `history: []`, and 7 zero buckets.
 
+### `PATCH /api/profile`
+
+Updates the two editable account fields — `name` and `image` (avatar URL). Nothing else on
+`User` is client-writable through this endpoint.
+
+Request body:
+
+```json
+{ "name": "Ada Lovelace", "image": "https://example.com/avatar.png" }
+```
+
+- `name` — required, trimmed, 1–100 chars.
+- `image` — optional; omit, `null`, or `""` clears the avatar back to the initial-letter
+  fallback. Non-empty values must be a valid URL (max 2000 chars) — in practice the URL
+  returned by `POST /api/upload` below, though a Google account's existing photo URL also
+  passes through unmodified until replaced.
+
+Response is the updated `ProfileUser`:
+
+```json
+{ "id": "cms0d87sg0004kjpnwk2lf4e1", "name": "Ada Lovelace", "email": "ada@example.com", "image": "https://example.com/avatar.png" }
+```
+
+The client must also call NextAuth's `useSession().update()` with the same `name`/`image`
+after a successful save — the JWT session cookie doesn't refresh from the DB on its own, and
+the header avatar/name reads from the session, not a refetch.
+
 401 when unauthenticated.
+
+---
+
+## Upload
+
+### `POST /api/upload`
+
+Generic image upload, not tied to any one feature — used today by the profile avatar editor;
+todo image attachments will call the same endpoint. Streams the file straight to Cloudinary
+(`src/shared/lib/cloudinary.ts`); nothing is persisted locally or in Postgres.
+
+Request is `multipart/form-data`:
+
+| Field | Required | Notes |
+| :--- | :--- | :--- |
+| `file` | ✅ | Image file. `image/png`, `image/jpeg`, `image/webp`, or `image/gif`. Max 5MB. |
+| `folder` | ✅ | One of `"avatars"` \| `"todos"` — the Cloudinary bucket to upload into. New callers add their own value here and to the `folderSchema` enum in the route before using it. |
+
+Uploads land in Cloudinary under `loop-everyday/{folder}/{userId}/…`.
+
+Response:
+
+```json
+{ "url": "https://res.cloudinary.com/…/loop-everyday/avatars/cms.../abc123.png", "publicId": "loop-everyday/avatars/cms.../abc123" }
+```
+
+400 if `file` is missing, the wrong type, over 5MB, or `folder` isn't a recognized value. 401
+when unauthenticated. Requires `CLOUDINARY_CLOUD_NAME` / `CLOUDINARY_API_KEY` /
+`CLOUDINARY_API_SECRET` env vars (see `.env.example`) — without them every upload fails.
 
 ---
 

@@ -22,9 +22,15 @@ export const authConfig: NextAuthConfig = {
     signIn: "/login",
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user?.id) {
         token.sub = user.id;
+      }
+      // Client called useSession().update(...) after a profile edit — merge the
+      // new values in immediately instead of waiting for the next sign-in.
+      if (trigger === "update" && session) {
+        if (typeof session.name === "string") token.name = session.name;
+        if ("image" in session) token.picture = session.image;
       }
       return token;
     },

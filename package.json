@@ -20,6 +20,7 @@
     "bcryptjs": "^3.0.3",
     "chart.js": "^4.4.2",
     "chrono-node": "^2.10.1",
+    "cloudinary": "^2.10.0",
     "clsx": "^2.1.0",
     "framer-motion": "^11.0.24",
     "lucide-react": "^1.26.0",
