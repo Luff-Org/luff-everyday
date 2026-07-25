@@ -10,6 +10,7 @@ import { QuickAddBar } from "@/features/todos/components/QuickAddBar";
 import { FilterTabs } from "@/features/todos/components/FilterTabs";
 import { TagFilterChips } from "@/features/todos/components/TagFilterChips";
 import { TodoList } from "@/features/todos/components/TodoList";
+import TodosLoading from "./loading";
 
 export default function TodosPage() {
   const mounted = useHasMounted();
@@ -23,14 +24,12 @@ export default function TodosPage() {
       fetchTodos();
       fetchTags();
     } else if (status === "unauthenticated") {
-      // Middleware already guards this route; this only fires if a session
-      // expires mid-visit.
       router.replace("/login?callbackUrl=/todos");
     }
   }, [status, fetchTodos, fetchTags, router]);
 
   if (!mounted || status !== "authenticated") {
-    return <div className="w-full min-h-[60vh]" />;
+    return <TodosLoading />;
   }
 
   return (

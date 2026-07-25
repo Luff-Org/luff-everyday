@@ -5,36 +5,40 @@ import type { TypingStats } from "@/features/typing/types";
 import { TypingStatsPanel } from "./TypingStatsPanel";
 import { TodoStatsPanel } from "./TodoStatsPanel";
 
-/**
- * Server component that fetches both stat aggregations directly (no HTTP hop)
- * and renders the panels. Wrapped in <Suspense> by the page so the shell can
- * stream first while these DB queries resolve.
- */
-export async function ProfileDashboard({ userId }: { userId: string }) {
-  let statsData: { todos: TodoStats; typing: TypingStats } | null = null;
-
+export async function TypingDashboard({ userId }: { userId: string }) {
+  let stats: TypingStats | null = null;
   try {
-    const [todos, typing] = await Promise.all([
-      todoService.stats(userId),
-      testService.stats(userId),
-    ]);
-    statsData = { todos, typing };
+    stats = await testService.stats(userId);
   } catch (error) {
-    console.error("ProfileDashboard stats error:", error);
+    console.error("TypingDashboard stats error:", error);
   }
 
-  if (!statsData) {
+  if (!stats) {
     return (
       <div className="p-6 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-center">
-        Unable to load dashboard statistics at this time. Please ensure the database connection is available and try refreshing.
+        Unable to load typing statistics. Please try refreshing.
       </div>
     );
   }
 
-  return (
-    <>
-      <TypingStatsPanel stats={statsData.typing} />
-      <TodoStatsPanel stats={statsData.todos} />
-    </>
-  );
+  return <TypingStatsPanel stats={stats} />;
+}
+
+export async function TodoDashboard({ userId }: { userId: string }) {
+  let stats: TodoStats | null = null;
+  try {
+    stats = await todoService.stats(userId);
+  } catch (error) {
+    console.error("TodoDashboard stats error:", error);
+  }
+
+  if (!stats) {
+    return (
+      <div className="p-6 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-center">
+        Unable to load todo statistics. Please try refreshing.
+      </div>
+    );
+  }
+
+  return <TodoStatsPanel stats={stats} />;
 }
