@@ -29,6 +29,17 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Derive the native color-scheme from each theme's background luminance so
+  // native controls (select popups, date pickers, scrollbars) match the theme.
+  const colorScheme = (hex: string) => {
+    const c = hex.replace("#", "");
+    const r = parseInt(c.slice(0, 2), 16);
+    const g = parseInt(c.slice(2, 4), 16);
+    const b = parseInt(c.slice(4, 6), 16);
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance < 0.5 ? "dark" : "light";
+  };
+
   const themeStyles = THEMES.map(
     (t) => `
     .${t.id} {
@@ -40,6 +51,7 @@ export default function RootLayout({
       --sub-text: ${t.sub};
       --card-bg: ${t.bg};
       --card-border: ${t.sub};
+      color-scheme: ${colorScheme(t.bg)};
     }
   `,
   ).join("\n");

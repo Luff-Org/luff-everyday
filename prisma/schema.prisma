@@ -66,8 +66,8 @@ model TestResult {
   duration  Int
   createdAt DateTime @default(now())
 
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 enum Priority {
@@ -84,14 +84,26 @@ enum RecurrenceRule {
   MONTHLY
 }
 
+enum EnergyLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
 model Todo {
   id                String         @id @default(cuid())
   title             String
   description       String?
+  notes             String?        @db.Text
   completed         Boolean        @default(false)
   completedAt       DateTime?
   priority          Priority       @default(MEDIUM)
+  startDate         DateTime?
   dueDate           DateTime?
+  estimatedMinutes  Int?
+  energyLevel       EnergyLevel?
+  context           String?
+  location          String?
   order             Int            @default(0)
   recurrence        RecurrenceRule @default(NONE)
   recurringParentId String?
@@ -99,11 +111,40 @@ model Todo {
   updatedAt         DateTime       @updatedAt
 
   userId   String
-  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   subtasks Subtask[]
   tags     TodoTag[]
+  links    TodoLink[]
+
+  // Dependencies (self-relation via TodoDependency join).
+  dependsOn TodoDependency[] @relation("BlockedTask") // tasks this one waits on
+  blocking  TodoDependency[] @relation("BlockingTask") // tasks waiting on this one
 
   @@index([userId, completed, dueDate])
+}
+
+model TodoLink {
+  id        String   @id @default(cuid())
+  url       String
+  title     String?
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  todoId String
+  todo   Todo   @relation(fields: [todoId], references: [id], onDelete: Cascade)
+
+  @@index([todoId])
+}
+
+model TodoDependency {
+  blockedId  String // the task that is blocked
+  blockingId String // the task that must be completed first
+
+  blocked  Todo @relation("BlockedTask", fields: [blockedId], references: [id], onDelete: Cascade)
+  blocking Todo @relation("BlockingTask", fields: [blockingId], references: [id], onDelete: Cascade)
+
+  @@id([blockedId, blockingId])
+  @@index([blockingId])
 }
 
 model Subtask {
@@ -117,9 +158,9 @@ model Subtask {
 }
 
 model Tag {
-  id     String @id @default(cuid())
-  name   String
-  color  String
+  id    String @id @default(cuid())
+  name  String
+  color String
 
   userId String
   user   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -131,8 +172,8 @@ model Tag {
 model TodoTag {
   todoId String
   tagId  String
-  todo   Todo @relation(fields: [todoId], references: [id], onDelete: Cascade)
-  tag    Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  todo   Todo   @relation(fields: [todoId], references: [id], onDelete: Cascade)
+  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
   @@id([todoId, tagId])
 }

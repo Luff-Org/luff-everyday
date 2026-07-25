@@ -1,4 +1,5 @@
 import type { Prisma, Priority } from "@prisma/client";
+import type { TodoStats } from "@/features/todos/types";
 import { HttpError } from "@/shared/lib/http";
 import { parseQuickAdd } from "@/features/todos/lib/todoParser";
 import { pickTagColor } from "@/features/todos/lib/tagColors";
@@ -11,6 +12,75 @@ import {
   createTagSchema,
 } from "@/features/todos/validation";
 import { todoRepository } from "./todo.repository";
+import type { UpdateTodoInput } from "@/features/todos/validation";
+
+/** Maps validated scalar fields onto a Prisma update payload (only set keys present). */
+function applyScalarFields(
+  data: Prisma.TodoUpdateInput,
+  input: Pick<
+    UpdateTodoInput,
+    | "title"
+    | "description"
+    | "notes"
+    | "priority"
+    | "startDate"
+    | "dueDate"
+    | "estimatedMinutes"
+    | "energyLevel"
+    | "context"
+    | "location"
+    | "recurrence"
+  >,
+) {
+  if (input.title !== undefined) data.title = input.title;
+  if (input.description !== undefined) data.description = input.description;
+  if (input.notes !== undefined) data.notes = input.notes;
+  if (input.priority !== undefined) data.priority = input.priority;
+  if (input.startDate !== undefined) {
+    data.startDate = input.startDate ? new Date(input.startDate) : null;
+  }
+  if (input.dueDate !== undefined) {
+    data.dueDate = input.dueDate ? new Date(input.dueDate) : null;
+  }
+  if (input.estimatedMinutes !== undefined) {
+    data.estimatedMinutes = input.estimatedMinutes;
+  }
+  if (input.energyLevel !== undefined) data.energyLevel = input.energyLevel;
+  if (input.context !== undefined) data.context = input.context;
+  if (input.location !== undefined) data.location = input.location;
+  if (input.recurrence !== undefined) data.recurrence = input.recurrence;
+}
+
+/**
+ * True if making `blockedId` depend on every id in `blockingIds` would introduce
+ * a cycle, given the existing dependency `edges` (each: blocked depends on blocking).
+ */
+function wouldCreateCycle(
+  edges: { blockedId: string; blockingId: string }[],
+  blockedId: string,
+  blockingIds: string[],
+): boolean {
+  if (blockingIds.includes(blockedId)) return true; // self-dependency
+  // adjacency: task -> tasks it depends on (must finish first)
+  const dependsOn = new Map<string, string[]>();
+  for (const e of edges) {
+    const list = dependsOn.get(e.blockedId) ?? [];
+    list.push(e.blockingId);
+    dependsOn.set(e.blockedId, list);
+  }
+  // From each proposed blocker, can we already reach blockedId? If so, adding the
+  // new edge closes a loop.
+  const seen = new Set<string>();
+  const stack = [...blockingIds];
+  while (stack.length) {
+    const node = stack.pop()!;
+    if (node === blockedId) return true;
+    if (seen.has(node)) continue;
+    seen.add(node);
+    for (const next of dependsOn.get(node) ?? []) stack.push(next);
+  }
+  return false;
+}
 
 /** Business logic for todos: validates input, applies rules, delegates to the repository. */
 export const todoService = {
@@ -33,9 +103,24 @@ export const todoService = {
     return todoRepository.create(userId, {
       title,
       description: input.description ?? null,
+      notes: input.notes ?? null,
+      startDate: input.startDate ? new Date(input.startDate) : null,
       dueDate,
       priority,
+      estimatedMinutes: input.estimatedMinutes ?? null,
+      energyLevel: input.energyLevel ?? null,
+      context: input.context ?? null,
+      location: input.location ?? null,
       tags: { create: tagLinks },
+      links: input.links?.length
+        ? {
+            create: input.links.map((l, i) => ({
+              url: l.url,
+              title: l.title ?? null,
+              order: i,
+            })),
+          }
+        : undefined,
     });
   },
 
@@ -45,13 +130,7 @@ export const todoService = {
     if (!existing) throw new HttpError(404, "Not found");
 
     const data: Prisma.TodoUpdateInput = {};
-    if (input.title !== undefined) data.title = input.title;
-    if (input.description !== undefined) data.description = input.description;
-    if (input.dueDate !== undefined) {
-      data.dueDate = input.dueDate ? new Date(input.dueDate) : null;
-    }
-    if (input.priority !== undefined) data.priority = input.priority;
-    if (input.recurrence !== undefined) data.recurrence = input.recurrence;
+    applyScalarFields(data, input);
     if (input.completed !== undefined) {
       data.completed = input.completed;
       data.completedAt = input.completed ? new Date() : null;
@@ -61,6 +140,31 @@ export const todoService = {
       await todoRepository.clearTagLinks(id);
       const tagLinks = await todoRepository.upsertTagLinks(userId, input.tags);
       data.tags = { create: tagLinks };
+    }
+
+    // Links: full replacement of the attached-link set.
+    if (input.links !== undefined) {
+      await todoRepository.setLinks(id, input.links);
+    }
+
+    // Dependencies: validate ownership, reject self/cycles, then replace.
+    if (input.dependsOn !== undefined) {
+      const blockingIds = Array.from(new Set(input.dependsOn)).filter(
+        (bid) => bid !== id,
+      );
+      if (blockingIds.length) {
+        const owned = await todoRepository.countOwnedIn(userId, blockingIds);
+        if (owned !== blockingIds.length) {
+          throw new HttpError(400, "Unknown blocker task");
+        }
+        const edges = await todoRepository.listDependencyEdges(userId);
+        // Drop this task's current outgoing edges — they're being replaced.
+        const rest = edges.filter((e) => e.blockedId !== id);
+        if (wouldCreateCycle(rest, id, blockingIds)) {
+          throw new HttpError(409, "That would create a circular dependency");
+        }
+      }
+      await todoRepository.setDependencies(id, blockingIds);
     }
 
     return todoRepository.update(id, data);
@@ -74,6 +178,18 @@ export const todoService = {
   },
 
   async complete(userId: string, id: string) {
+    const existing = await todoRepository.findOwned(id, userId);
+    if (!existing) throw new HttpError(404, "Not found");
+
+    // Can't finish a task while any blocker it depends on is still open.
+    const blockers = await todoRepository.incompleteBlockers(id);
+    if (blockers.length) {
+      throw new HttpError(
+        409,
+        `Blocked by ${blockers.length} unfinished task${blockers.length > 1 ? "s" : ""}`,
+      );
+    }
+
     const result = await todoRepository.completeWithRecurrence(id, userId);
     if (!result) throw new HttpError(404, "Not found");
     return result;
@@ -83,6 +199,71 @@ export const todoService = {
     const { items } = reorderSchema.parse(body);
     await todoRepository.reorder(userId, items);
     return { success: true };
+  },
+
+  async stats(userId: string): Promise<TodoStats> {
+    const now = new Date();
+    const startOfToday = new Date(now);
+    startOfToday.setHours(0, 0, 0, 0);
+    const endOfToday = new Date(startOfToday);
+    endOfToday.setHours(23, 59, 59, 999);
+    const weekStart = new Date(startOfToday);
+    weekStart.setDate(weekStart.getDate() - 6);
+
+    const [byCompleted, byPriorityRows, overdue, dueToday, tagCount, completed] =
+      await Promise.all([
+        todoRepository.countByCompleted(userId),
+        todoRepository.countActiveByPriority(userId),
+        todoRepository.countOverdue(userId, now),
+        todoRepository.countDueBetween(userId, startOfToday, endOfToday),
+        todoRepository.countTags(userId),
+        todoRepository.completedSince(userId, weekStart),
+      ]);
+
+    const completedCount =
+      byCompleted.find((r) => r.completed)?._count ?? 0;
+    const activeCount = byCompleted.find((r) => !r.completed)?._count ?? 0;
+    const total = completedCount + activeCount;
+
+    const byPriority: Record<Priority, number> = {
+      LOW: 0,
+      MEDIUM: 0,
+      HIGH: 0,
+      URGENT: 0,
+    };
+    for (const row of byPriorityRows) byPriority[row.priority] = row._count;
+
+    // 7 day buckets (oldest first), keyed by local YYYY-MM-DD.
+    const dayKey = (d: Date) =>
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
+        d.getDate(),
+      ).padStart(2, "0")}`;
+    const buckets = new Map<string, number>();
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(weekStart);
+      d.setDate(d.getDate() + i);
+      buckets.set(dayKey(d), 0);
+    }
+    for (const { completedAt } of completed) {
+      if (!completedAt) continue;
+      const key = dayKey(new Date(completedAt));
+      if (buckets.has(key)) buckets.set(key, (buckets.get(key) ?? 0) + 1);
+    }
+
+    return {
+      total,
+      active: activeCount,
+      completed: completedCount,
+      completionRate: total > 0 ? Math.round((completedCount / total) * 100) : 0,
+      overdue,
+      dueToday,
+      tagCount,
+      byPriority,
+      completedLast7Days: Array.from(buckets, ([date, count]) => ({
+        date,
+        count,
+      })),
+    };
   },
 
   // ── Tags ──

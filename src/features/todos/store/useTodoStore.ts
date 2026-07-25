@@ -100,10 +100,16 @@ export const useTodoStore = create<TodoState>((set, get) => {
         id: tempId,
         title: parsed.title,
         description: description ?? null,
+        notes: null,
         completed: false,
         completedAt: null,
         priority: parsed.priority ?? "MEDIUM",
+        startDate: null,
         dueDate: finalDueDate,
+        estimatedMinutes: null,
+        energyLevel: null,
+        context: null,
+        location: null,
         order: 0,
         recurrence: "NONE",
         recurringParentId: null,
@@ -111,6 +117,8 @@ export const useTodoStore = create<TodoState>((set, get) => {
         updatedAt: new Date().toISOString(),
         userId: "",
         subtasks: [],
+        links: [],
+        dependsOn: [],
         tags: parsed.tags.map((name) => ({
           todoId: tempId,
           tagId: name,
@@ -180,7 +188,10 @@ export const useTodoStore = create<TodoState>((set, get) => {
         return;
       }
       const snapshot = get().todos;
-      const { tags: _tags, ...localPatch } = patch;
+      // tags/links/dependsOn are relations whose wire shape differs from the
+      // patch shape (ids need resolving server-side) — apply scalars locally
+      // and let the server response reconcile the relations.
+      const { tags: _tags, links: _links, dependsOn: _dependsOn, ...localPatch } = patch;
       set({
         todos: snapshot.map((t) => (t.id === id ? { ...t, ...localPatch } : t)),
       });

@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect, useState } from "react";
 import { useFrame, Canvas } from "@react-three/fiber";
-import { Environment, ContactShadows } from "@react-three/drei";
+import { ContactShadows } from "@react-three/drei";
 import * as THREE from "three";
 import { useThemeStore } from "@/shared/store/useThemeStore";
 import { THEMES } from "@/shared/lib/constants";
@@ -339,6 +339,7 @@ export default function MascotPlant() {
           castShadow
         />
         <pointLight position={[-10, -10, -10]} intensity={0.5} />
+        <hemisphereLight args={["#ffffff", "#444444", 0.6]} />
 
         <Character mouse={mouse} />
 
@@ -349,8 +350,6 @@ export default function MascotPlant() {
           blur={2.5}
           far={4}
         />
-
-        <Environment preset="city" />
       </Canvas>
     </div>
   );
