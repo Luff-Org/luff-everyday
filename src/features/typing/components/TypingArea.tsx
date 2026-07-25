@@ -97,9 +97,16 @@ export default function TypingArea() {
 
   return (
     <div className="w-full flex flex-col items-start gap-4">
-      {/* Live Timer */}
-      <div className="text-3xl font-bold text-primary tracking-wider transition-opacity duration-300 min-h-[40px]">
-        {status === "typing" ? `${timeLeft}s` : ""}
+      {/* Live Timer — kept mounted; only opacity animates so the countdown
+          fades in/out smoothly. tabular-nums stops digit-width jitter. */}
+      <div
+        className={clsx(
+          "text-3xl font-bold text-primary tracking-wider tabular-nums min-h-[40px] transition-opacity duration-300",
+          status === "typing" ? "opacity-100" : "opacity-0",
+        )}
+        aria-hidden={status !== "typing"}
+      >
+        {timeLeft}s
       </div>
 
       <div
