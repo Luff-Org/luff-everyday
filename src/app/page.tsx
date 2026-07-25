@@ -5,7 +5,7 @@ import { Keyboard, Lock, Zap, Target } from "lucide-react";
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
 
-const MascotCat = dynamic(() => import("@/components/3d/MascotCat"), {
+const MascotCat = dynamic(() => import("@/shared/components/3d/MascotCat"), {
   ssr: false,
   loading: () => (
     <div className="w-full h-full min-h-[400px] bg-transparent animate-pulse rounded-2xl" />
@@ -29,8 +29,8 @@ export default function LandingPage() {
       icon: (
         <Target className="w-8 h-8 mb-4 text-sub-text group-hover:scale-110 transition-transform" />
       ),
-      href: "#",
-      active: false,
+      href: "/todos",
+      active: true,
     },
     {
       title: "Deep Journal",

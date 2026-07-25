@@ -1,17 +1,13 @@
 "use client";
 
-import { useTypingStore } from "@/store/useTypingStore";
-import TypingArea from "@/components/TypingArea";
-import ResultScreen from "@/components/ResultScreen";
-import { useState, useEffect } from "react";
+import { useTypingStore } from "@/features/typing/store/useTypingStore";
+import TypingArea from "@/features/typing/components/TypingArea";
+import ResultScreen from "@/features/typing/components/ResultScreen";
+import { useHasMounted } from "@/shared/lib/useHasMounted";
 
 export default function Home() {
   const status = useTypingStore((state) => state.status);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useHasMounted();
 
   if (!mounted) {
     return (

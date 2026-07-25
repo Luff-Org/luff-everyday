@@ -1,7 +1,7 @@
 "use client";
 
-import { useThemeStore } from "@/store/useThemeStore";
-import { useAppFontStore } from "@/store/useAppFontStore";
+import { useThemeStore } from "@/shared/store/useThemeStore";
+import { useAppFontStore } from "@/shared/store/useAppFontStore";
 import { clsx } from "clsx";
 import { Paintbrush, Monitor, ArrowLeft } from "lucide-react";
 import { useState } from "react";
@@ -10,7 +10,7 @@ import {
   APP_FONTS,
   type ThemeDef,
   type FontDef,
-} from "@/lib/constants";
+} from "@/shared/lib/constants";
 import { useRouter } from "next/navigation";
 
 export default function SettingsPage() {

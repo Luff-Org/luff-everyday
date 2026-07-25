@@ -65,3 +65,83 @@ body {
   flex-wrap: wrap;
   gap: 0.5rem;
 }
+
+/* react-day-picker theming — re-skinned to follow the active app theme.
+   !important throughout: the library's own stylesheet is chunk-loaded after
+   globals.css and sets these same custom properties/colors directly on the
+   same elements, so a plain same-specificity override loses the cascade tie
+   (and inherited custom properties always lose to a direct rule on the
+   element itself, regardless of where the direct rule is declared). */
+.rdp-root {
+  --rdp-accent-color: var(--primary) !important;
+  --rdp-accent-background-color: color-mix(in srgb, var(--primary) 15%, transparent) !important;
+  --rdp-today-color: var(--primary) !important;
+  --rdp-day_button-border-radius: 0.5rem;
+  --rdp-day-width: 2.25rem;
+  --rdp-day-height: 2.25rem;
+  --rdp-day_button-width: 2rem;
+  --rdp-day_button-height: 2rem;
+  color: var(--foreground) !important;
+  font-size: 0.75rem;
+}
+.rdp-weekday {
+  color: var(--sub-text) !important;
+  opacity: 0.7;
+  font-weight: 700;
+  font-size: 0.625rem;
+  text-transform: uppercase;
+}
+.rdp-month_caption {
+  color: var(--foreground) !important;
+  font-weight: 800;
+}
+.rdp-day_button {
+  color: var(--foreground) !important;
+}
+.rdp-day_button:hover:not([disabled]) {
+  background-color: color-mix(in srgb, var(--sub-text) 12%, transparent) !important;
+}
+.rdp-day_button:focus,
+.rdp-day_button:focus-visible {
+  outline: 2px solid var(--primary) !important;
+  outline-offset: 1px;
+}
+.rdp-nav button:focus,
+.rdp-nav button:focus-visible {
+  outline: 2px solid var(--primary) !important;
+  outline-offset: 1px;
+}
+.rdp-today:not(.rdp-outside) .rdp-day_button {
+  color: var(--primary) !important;
+  font-weight: 800;
+}
+.rdp-today.rdp-selected .rdp-day_button {
+  /* Same specificity as the today-color rule above (3 classes each) — placed
+     after it so this wins the tie and restores readable contrast when a day
+     is both today and selected (filled background needs background-toned text). */
+  color: var(--background) !important;
+}
+.rdp-selected .rdp-day_button {
+  background-color: var(--primary) !important;
+  color: var(--background) !important;
+  border-color: var(--primary) !important;
+  font-weight: 800;
+}
+.rdp-selected .rdp-day_button:hover:not([disabled]) {
+  background-color: var(--primary) !important;
+  color: var(--background) !important;
+}
+.rdp-outside .rdp-day_button {
+  opacity: 0.35;
+}
+.rdp-disabled .rdp-day_button {
+  opacity: 0.25;
+}
+.rdp-nav button {
+  color: var(--sub-text) !important;
+  border-radius: 0.5rem;
+}
+.rdp-nav button:hover:not([disabled]) {
+  color: var(--foreground) !important;
+  background-color: color-mix(in srgb, var(--sub-text) 12%, transparent) !important;
+}
