@@ -35,6 +35,8 @@ interface TodoState {
   setTagFilter: (tagId: string | null) => void;
 }
 
+const isTempId = (id: string) => id.startsWith("temp-");
+
 export const useTodoStore = create<TodoState>((set, get) => {
   /**
    * Runs an already-applied optimistic mutation against the server: on failure
@@ -132,6 +134,10 @@ export const useTodoStore = create<TodoState>((set, get) => {
     },
 
     toggleComplete: async (id) => {
+      if (isTempId(id)) {
+        toast.info("Still saving that todo, try again in a moment.");
+        return;
+      }
       const snapshot = get().todos;
       const todo = snapshot.find((t) => t.id === id);
       if (!todo) return;
@@ -169,6 +175,10 @@ export const useTodoStore = create<TodoState>((set, get) => {
     },
 
     updateTodo: async (id, patch) => {
+      if (isTempId(id)) {
+        toast.info("Still saving that todo, try again in a moment.");
+        return;
+      }
       const snapshot = get().todos;
       const { tags: _tags, ...localPatch } = patch;
       set({
@@ -190,6 +200,7 @@ export const useTodoStore = create<TodoState>((set, get) => {
     deleteTodo: async (id) => {
       const snapshot = get().todos;
       set({ todos: snapshot.filter((t) => t.id !== id) });
+      if (isTempId(id)) return;
       await commit(
         snapshot,
         () => todosApi.remove(id),
@@ -199,6 +210,10 @@ export const useTodoStore = create<TodoState>((set, get) => {
 
     addSubtask: async (todoId, title) => {
       if (!title.trim()) return;
+      if (isTempId(todoId)) {
+        toast.info("Still saving that todo, try again in a moment.");
+        return;
+      }
       const snapshot = get().todos;
       const tempId = `temp-${crypto.randomUUID()}`;
       set({
@@ -247,6 +262,10 @@ export const useTodoStore = create<TodoState>((set, get) => {
       const todo = snapshot.find((t) => t.id === todoId);
       const subtask = todo?.subtasks.find((s) => s.id === subtaskId);
       if (!subtask) return;
+      if (isTempId(subtaskId)) {
+        toast.info("Still saving that subtask, try again in a moment.");
+        return;
+      }
       const nextCompleted = !subtask.completed;
 
       set({
@@ -282,6 +301,7 @@ export const useTodoStore = create<TodoState>((set, get) => {
         ),
       });
 
+      if (isTempId(subtaskId)) return;
       await commit(
         snapshot,
         () => todosApi.removeSubtask(todoId, subtaskId),
