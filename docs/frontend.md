@@ -30,7 +30,7 @@ under `src/features/*`.
 
 | Store | Scope | Persisted |
 | :--- | :--- | :--- |
-| `features/todos/store/useTodoStore.ts` | todos, tags, `filter`, `tagFilter`, `isLoading` | no (server is the source) |
+| `features/todos/store/useTodoStore.ts` | todos, tags, `filter`, `tagFilter`, `isLoading`, `hasLoaded` | no (server is the source) |
 | `features/typing/store/useTypingStore.ts` | typing engine state machine | no |
 | `shared/store/useThemeStore.ts` | active theme id | localStorage `luff-theme-storage` |
 | `shared/store/useAppFontStore.ts` | active font id | localStorage `luff-app-font-storage` |
@@ -116,13 +116,56 @@ and streams `ProfileDashboard` (which awaits the aggregations) inside `<Suspense
 fallback={<ProfileSkeleton />}>`. Panels: `TypingStatsPanel`, `TodoStatsPanel`,
 `TypingTrendChart`, with `StatTile` for individual metrics.
 
+## Loading states
+
+Every placeholder is built from `shared/ui/Skeleton.tsx`:
+
+- `<Skeleton>` — one block. Styled by the `.skeleton` class in `globals.css`: base fill and
+  sweep highlight are both derived from the theme's `--sub-text` / `--foreground` / `--primary`
+  via `color-mix`, so skeletons re-tint with the theme instead of hard-coding greys. `accent`
+  switches the fill to the primary colour; `delay` offsets the sweep so sibling rows animate as
+  a wave. `prefers-reduced-motion` drops the sweep and leaves a static tint.
+- `<SkeletonScreen label>` — wraps a group as one `role="status" aria-busy` live region.
+  Individual blocks are `aria-hidden`, so assistive tech hears one message, not N boxes.
+
+**Rule: a skeleton mirrors the box model of the thing it replaces** — same padding, radius,
+border and fixed heights — so the swap causes no layout shift. Any randomness (bar widths,
+chart silhouettes) must come from a fixed table, never `Math.random()`, or server and client
+markup diverge.
+
+Where each lives:
+
+| Placeholder | Mirrors |
+| :--- | :--- |
+| `app/typing/loading.tsx` → `TypingSkeleton` | `TypingArea` (3.5rem line rows, 14rem viewport, 40px timer slot) |
+| `app/todos/loading.tsx` → `TodoSkeletonList` | `TodoItem` rows; used in-page by `TodoList` |
+| `app/todos/loading.tsx` (default) | the whole todos screen, for route transitions |
+| `features/profile/components/ProfileSkeleton.tsx` | `StatTile`, `TypingStatsPanel`, `TodoStatsPanel` |
+| `app/settings/loading.tsx` | one chip per real `APP_FONTS` / `THEMES` entry |
+
+Loaders are scoped as tightly as the data allows. `/todos` renders its title, `QuickAddBar` and
+`FilterTabs` immediately — none of them need server data — and skeletons only the list.
+`TodoList` gates on the store's `hasLoaded`, not `isLoading`, so the empty state can't flash in
+the render before the first request starts.
+
 ## Theming and fonts
 
 `shared/lib/constants.ts` holds 32 `ThemeDef`s (`bg`, `primary`, `sub`, `fg`, `error`) and 20
-`FontDef`s. `ThemeProvider` writes the active theme's colours to CSS custom properties
-(`--primary`, `--sub-text`, `--error`, …) on `document.body`; Tailwind classes reference those
-variables (`text-primary`, `text-sub-text`). `DynamicFavicon` redraws the favicon in the
-active palette. Defaults: theme `dark-luff`, font `app-system`.
+`FontDef`s. Tailwind classes reference the theme's CSS custom properties (`text-primary`,
+`text-sub-text`), which `layout.tsx` emits as one class-per-theme stylesheet.
+
+**First paint is set before React runs.** A small inline script in `<head>` reads the same
+localStorage keys the zustand stores persist to (`STORAGE_KEYS`) and stamps the theme class and
+`--app-font` onto `<html>`. `ThemeProvider` then only applies *changes* made after hydration.
+This replaced an older approach that hid the entire tree until mounted; don't reintroduce it —
+the script is what makes the correct theme available on the first frame. `<html>` carries
+`suppressHydrationWarning` because that script mutates its attributes.
+
+The ~25 picker font families are loaded from Google Fonts via a `media="print"` `<link>` that
+the same script promotes to `media="all"` on load, keeping it off the critical path. It is
+deliberately *not* an `@import` in `globals.css` — that blocks rendering. `DynamicFavicon`
+redraws the favicon in the active palette. Defaults: theme `dark-luff`, font `app-system`
+(unset falls through to the self-hosted next/font Inter).
 
 Chart.js cannot read CSS variables, so `shared/lib/useChartColors.ts` reads the computed
 values after mount (re-running on theme change) and falls back to `CHART_FALLBACK_COLORS`
@@ -130,6 +173,12 @@ during SSR.
 
 ## Hydration
 
-Anything that depends on persisted client state renders a placeholder until mounted, via
-`shared/lib/useHasMounted.ts` — `/typing` shows "Loading workspace…", `/todos` renders an
-empty shell. Skipping this reintroduces theme/font hydration mismatches.
+Theme and font no longer need a mount gate — the pre-paint script handles them (see above).
+The one remaining use of `shared/lib/useHasMounted.ts` is `/typing`: the word buffer is
+generated randomly at store init, so server and client markup can't match, and the page shows
+`TypingSkeleton` until hydration.
+
+`Providers` mounts `SessionProvider` and nothing else. It must not gate rendering on
+`useSession()`: routes needing auth are already guarded by `src/proxy.ts`, and the header's
+`AuthSlot` reserves its own footprint while the session resolves, so blocking the tree only
+ever added latency.

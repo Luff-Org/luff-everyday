@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { toast } from "sonner";
 import { parseQuickAdd } from "@/features/todos/lib/todoParser";
-import { todosApi } from "@/features/todos/api";
+import { todosApi, ApiError } from "@/features/todos/api";
 import type {
   Todo,
   Subtask,
@@ -18,6 +18,10 @@ interface TodoState {
   filter: TodoFilter;
   tagFilter: string | null;
   isLoading: boolean;
+  /** False until the first list request has settled — lets the UI tell "still
+   *  loading" apart from "loaded and genuinely empty". */
+  hasLoaded: boolean;
+  loadInitialData: () => Promise<void>;
   fetchTodos: () => Promise<void>;
   fetchTags: () => Promise<void>;
   addTodo: (input: {
@@ -37,7 +41,16 @@ interface TodoState {
 
 const isTempId = (id: string) => id.startsWith("temp-");
 
+/** A dropped session mid-visit: bounce to login rather than showing an error. */
+function isUnauthorized(error: unknown) {
+  return error instanceof ApiError && error.status === 401;
+}
+
 export const useTodoStore = create<TodoState>((set, get) => {
+  /** In-flight initial load, so React's double-invoked effects (StrictMode) and
+   *  remounts share one pair of requests instead of racing duplicates. */
+  let initialLoad: Promise<void> | null = null;
+
   /**
    * Runs an already-applied optimistic mutation against the server: on failure
    * it restores `snapshot` and shows `errorMessage`; on success runs `reconcile`.
@@ -63,14 +76,47 @@ export const useTodoStore = create<TodoState>((set, get) => {
     filter: "all",
     tagFilter: null,
     isLoading: false,
+    hasLoaded: false,
+
+    /**
+     * Page-entry fetch: todos and tags go out together rather than one after the
+     * other, and the route is already guarded by middleware, so this does not
+     * wait on `useSession()` resolving first.
+     */
+    loadInitialData: () => {
+      if (initialLoad) return initialLoad;
+
+      initialLoad = (async () => {
+        set({ isLoading: true });
+        try {
+          const [todos, tags] = await Promise.all([
+            todosApi.list(),
+            todosApi.listTags(),
+          ]);
+          set({ todos, tags, isLoading: false, hasLoaded: true });
+        } catch (error) {
+          if (isUnauthorized(error)) {
+            window.location.href = "/login?callbackUrl=/todos";
+            return;
+          }
+          console.error(error);
+          set({ isLoading: false, hasLoaded: true });
+          toast.error("Couldn't load your todos.");
+        } finally {
+          initialLoad = null;
+        }
+      })();
+
+      return initialLoad;
+    },
 
     fetchTodos: async () => {
       set({ isLoading: true });
       try {
-        set({ todos: await todosApi.list(), isLoading: false });
+        set({ todos: await todosApi.list(), isLoading: false, hasLoaded: true });
       } catch (error) {
         console.error(error);
-        set({ isLoading: false });
+        set({ isLoading: false, hasLoaded: true });
         toast.error("Couldn't load your todos.");
       }
     },

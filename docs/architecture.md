@@ -37,7 +37,7 @@ src/
       config.ts               edge-safe config (no Prisma)
       register.service.ts validation.ts
   shared/
-    ui/                       generic presentational (Tooltip, LoadingScreen)
+    ui/                       generic presentational (Tooltip, Skeleton)
     components/               app-wide (Header, UserMenu, Providers, ThemeProvider,
                               DynamicFavicon, 3d/MascotCat)
     store/                    useThemeStore, useAppFontStore

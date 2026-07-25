@@ -1,18 +1,27 @@
 import type { Metadata } from "next";
 import { Inter, Roboto_Mono } from "next/font/google";
 import "./globals.css";
+import { Toaster } from "sonner";
 import { Providers } from "@/shared/components/Providers";
 import { ThemeProvider } from "@/shared/components/ThemeProvider";
 import DynamicFavicon from "@/shared/components/DynamicFavicon";
 import Header from "@/shared/components/Header";
-import { THEMES } from "@/shared/lib/constants";
+import { THEMES, DEFAULT_THEME, STORAGE_KEYS } from "@/shared/lib/constants";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
+});
 const robotoMono = Roboto_Mono({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-roboto-mono",
 });
+
+/** The font-picker families (settings page). Loaded async — see the link below. */
+const PICKER_FONTS_HREF =
+  "https://fonts.googleapis.com/css2?family=Bangers&family=Bungee&family=Comic+Neue&family=Creepster&family=Fira+Code&family=Inconsolata&family=Inter:wght@400;500;700&family=JetBrains+Mono&family=Lato:wght@400;700&family=Lobster&family=Luckiest+Guy&family=Monoton&family=Nunito:wght@400;700&family=Oswald:wght@400;600&family=Pacifico&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Poppins:wght@400;500;600&family=Press+Start+2P&family=Righteous&family=Roboto+Mono&family=Roboto:wght@400;500;700&family=Space+Mono&family=Ubuntu+Mono&family=Ubuntu:wght@400;500;700&display=swap";
 
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -22,7 +31,34 @@ export const metadata: Metadata = {
   description: "Minimalist typing tests and productivity tools.",
 };
 
-import { Toaster } from "sonner";
+/**
+ * Runs before the browser paints anything: reads the same localStorage keys the
+ * zustand stores persist to and stamps the theme class / font variable onto
+ * <html>. This is what lets the app render immediately instead of hiding the
+ * tree until React hydrates — no flash of the wrong theme, no blank first frame.
+ *
+ * Also flips the picker-font stylesheet to `media="all"` once it has finished
+ * downloading, so that sheet never blocks the first render.
+ */
+const PRE_PAINT_SCRIPT = `
+(function () {
+  try {
+    var read = function (key) {
+      var raw = localStorage.getItem(key);
+      return raw ? (JSON.parse(raw) || {}).state || null : null;
+    };
+    var theme = (read(${JSON.stringify(STORAGE_KEYS.theme)}) || {}).theme || ${JSON.stringify(DEFAULT_THEME)};
+    document.documentElement.className = theme === "light" ? "" : theme;
+    var font = (read(${JSON.stringify(STORAGE_KEYS.font)}) || {}).appFontFamilyString;
+    if (font) document.documentElement.style.setProperty("--app-font", font);
+  } catch (e) {}
+  var link = document.getElementById("picker-fonts");
+  if (link) {
+    if (link.sheet) link.media = "all";
+    else link.addEventListener("load", function () { link.media = "all"; });
+  }
+})();
+`;
 
 export default function RootLayout({
   children,
@@ -57,11 +93,31 @@ export default function RootLayout({
   ).join("\n");
 
   return (
-    <html lang="en">
+    // The pre-paint script mutates <html>'s class and style; React must not
+    // treat that as a hydration mismatch.
+    <html lang="en" suppressHydrationWarning>
       <head>
         <style dangerouslySetInnerHTML={{ __html: themeStyles }} />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        {/* media="print" keeps this off the critical path; the script below
+            promotes it to "all" once it has downloaded. On a warm cache that
+            promotion lands before hydration, so React must be told the
+            attribute is expected to differ. */}
+        <link
+          id="picker-fonts"
+          rel="stylesheet"
+          href={PICKER_FONTS_HREF}
+          media="print"
+          suppressHydrationWarning
+        />
+        <script dangerouslySetInnerHTML={{ __html: PRE_PAINT_SCRIPT }} />
       </head>
-      <body className={`${inter.className} ${robotoMono.variable}`}>
+      <body className={`${inter.variable} ${robotoMono.variable}`}>
         <ThemeProvider>
           <Providers>
             <DynamicFavicon />

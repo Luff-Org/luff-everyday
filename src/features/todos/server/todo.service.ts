@@ -211,19 +211,32 @@ export const todoService = {
       const weekStart = new Date(startOfToday);
       weekStart.setDate(weekStart.getDate() - 6);
 
-      const [todos, tagCount] = await todoRepository.listForStats(userId);
+      const [byCompletion, byPriorityRows, overdue, dueToday, recentlyDone, tagCount] =
+        await todoRepository.statsBundle(userId, {
+          now,
+          startOfToday,
+          endOfToday,
+          weekStart,
+        });
 
-      let completedCount = 0;
-      let activeCount = 0;
-      let overdue = 0;
-      let dueToday = 0;
+      const countFor = (completed: boolean) =>
+        byCompletion.find((row) => row.completed === completed)?._count._all ?? 0;
+      const activeCount = countFor(false);
+      const completedCount = countFor(true);
+      const total = activeCount + completedCount;
+
       const byPriority: Record<Priority, number> = {
         LOW: 0,
         MEDIUM: 0,
         HIGH: 0,
         URGENT: 0,
       };
+      for (const row of byPriorityRows) {
+        byPriority[row.priority] = row._count._all;
+      }
 
+      // Seed all seven days so the chart always has a full week of columns,
+      // then fold the completed rows into their local-time day.
       const dayKey = (d: Date) =>
         `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
           d.getDate(),
@@ -234,28 +247,11 @@ export const todoService = {
         d.setDate(d.getDate() + i);
         buckets.set(dayKey(d), 0);
       }
-
-      for (const t of todos) {
-        if (t.completed) {
-          completedCount++;
-          if (t.completedAt) {
-            const key = dayKey(new Date(t.completedAt));
-            if (buckets.has(key)) {
-              buckets.set(key, (buckets.get(key) ?? 0) + 1);
-            }
-          }
-        } else {
-          activeCount++;
-          byPriority[t.priority] = (byPriority[t.priority] ?? 0) + 1;
-          if (t.dueDate) {
-            const due = new Date(t.dueDate);
-            if (due < now) overdue++;
-            if (due >= startOfToday && due <= endOfToday) dueToday++;
-          }
-        }
+      for (const row of recentlyDone) {
+        if (!row.completedAt) continue;
+        const key = dayKey(row.completedAt);
+        if (buckets.has(key)) buckets.set(key, (buckets.get(key) ?? 0) + 1);
       }
-
-      const total = completedCount + activeCount;
 
       return {
         total,

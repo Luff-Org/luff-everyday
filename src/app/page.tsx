@@ -67,7 +67,6 @@ export default function LandingPage() {
           </p>
           <Link
             href="/typing"
-            prefetch={false}
             className="inline-flex items-center px-10 py-5 bg-primary text-background font-black rounded-2xl hover:scale-105 transition-transform text-lg shadow-[0_20px_60px_-10px_rgba(var(--primary-rgb),0.5)]"
           >
             Start Practice →
@@ -101,7 +100,6 @@ export default function LandingPage() {
             {card.active ? (
               <Link
                 href={card.href}
-                prefetch={false}
                 className="absolute inset-0 z-20 rounded-2xl"
               />
             ) : (

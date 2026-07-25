@@ -7,11 +7,11 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { DURATION_OPTIONS } from "@/features/typing/lib/constants";
-import { useHasMounted } from "@/shared/lib/useHasMounted";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 
 import { Tooltip } from "@/shared/ui/Tooltip";
+import { Skeleton } from "@/shared/ui/Skeleton";
 import { UserMenu } from "@/shared/components/UserMenu";
 
 function NavIcon({
@@ -46,7 +46,7 @@ function NavIcon({
   return (
     <Tooltip content={label} position="bottom">
       {href ? (
-        <Link href={href} prefetch={false} className="outline-none">
+        <Link href={href} className="outline-none">
           {content}
         </Link>
       ) : (
@@ -55,6 +55,58 @@ function NavIcon({
         </button>
       )}
     </Tooltip>
+  );
+}
+
+/**
+ * The account corner. Reserves the same footprint in all three states
+ * (resolving / signed in / signed out) so the header never reflows once the
+ * session resolves.
+ */
+function AuthSlot({
+  status,
+  name,
+  email,
+  loginHref,
+  variant,
+}: {
+  status: "loading" | "authenticated" | "unauthenticated";
+  name?: string | null;
+  email?: string | null;
+  loginHref: string;
+  variant: "mobile" | "desktop";
+}) {
+  if (status === "loading") {
+    return (
+      <div className="flex items-center gap-2" aria-hidden="true">
+        <Skeleton className="h-8 w-8 rounded-full" />
+        {variant === "desktop" && <Skeleton className="h-4 w-20" delay={120} />}
+      </div>
+    );
+  }
+
+  return (
+    <AnimatePresence mode="wait">
+      {status === "authenticated" ? (
+        <motion.div
+          key={`auth-user-${variant}`}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.9 }}
+        >
+          <UserMenu name={name} email={email} />
+        </motion.div>
+      ) : (
+        <motion.div
+          key={`auth-guest-${variant}`}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.9 }}
+        >
+          <NavIcon href={loginHref} icon={User} label="Login" />
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -68,7 +120,6 @@ export default function Header() {
   const setDuration = useTypingStore((s) => s.setDuration);
   const { data: session, status: authStatus } = useSession();
   const pathname = usePathname();
-  const mounted = useHasMounted();
   const hasNotified = useRef(false);
 
   const isTypingPage = pathname === "/typing";
@@ -97,14 +148,13 @@ export default function Header() {
     }
   }, [authStatus, session]);
 
-  if (!mounted) return <header className="w-full h-20" />;
-
+  // Rendered identically on the server and on first client paint — the only
+  // session-dependent part is <AuthSlot>, which reserves its own footprint.
   return (
     <header className="sticky top-0 z-50 w-full flex flex-col md:flex-row items-center justify-between min-h-[5rem] py-4 px-6 md:py-0 text-sub-text bg-background">
       <div className="w-full md:w-auto flex items-center justify-between">
         <Link
           href="/"
-          prefetch={false}
           className="flex items-center gap-2 text-2xl font-black text-primary cursor-pointer hover:opacity-80 transition-all font-mono"
         >
           <Activity className="w-8 h-8" />
@@ -114,27 +164,13 @@ export default function Header() {
         {/* Mobile controls */}
         <div className="md:hidden flex items-center gap-4">
           <NavIcon href="/todos" icon={ListTodo} label="Todos" />
-          <AnimatePresence mode="wait">
-            {session ? (
-              <motion.div
-                key="auth-user-mobile-btn"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-              >
-                <UserMenu name={session.user?.name} email={session.user?.email} />
-              </motion.div>
-            ) : (
-              <motion.div
-                key="auth-guest-mobile-btn"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-              >
-                <NavIcon href={loginHref} icon={User} label="Login" />
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <AuthSlot
+            variant="mobile"
+            status={authStatus}
+            name={session?.user?.name}
+            email={session?.user?.email}
+            loginHref={loginHref}
+          />
         </div>
       </div>
 
@@ -170,27 +206,13 @@ export default function Header() {
       {/* Desktop controls */}
       <div className="hidden md:flex items-center gap-6">
         <NavIcon href="/todos" icon={ListTodo} label="Todos" />
-        <AnimatePresence mode="wait">
-          {session ? (
-            <motion.div
-              key="auth-user-desktop-wrap"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-            >
-              <UserMenu name={session.user?.name} email={session.user?.email} />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="auth-guest-desktop-btn"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-            >
-              <NavIcon href={loginHref} icon={User} label="Login" />
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <AuthSlot
+          variant="desktop"
+          status={authStatus}
+          name={session?.user?.name}
+          email={session?.user?.email}
+          loginHref={loginHref}
+        />
       </div>
     </header>
   );
