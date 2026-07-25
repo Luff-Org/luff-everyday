@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { Inter, Roboto_Mono } from "next/font/google";
 import "./globals.css";
-import { Providers } from "@/components/Providers";
-import { ThemeProvider } from "@/components/ThemeProvider";
-import DynamicFavicon from "@/components/DynamicFavicon";
-import Header from "@/components/Header";
-import { THEMES } from "@/lib/constants";
+import { Providers } from "@/shared/components/Providers";
+import { ThemeProvider } from "@/shared/components/ThemeProvider";
+import DynamicFavicon from "@/shared/components/DynamicFavicon";
+import Header from "@/shared/components/Header";
+import { THEMES } from "@/shared/lib/constants";
 
 const inter = Inter({ subsets: ["latin"] });
 const robotoMono = Roboto_Mono({

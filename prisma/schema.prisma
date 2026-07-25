@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Account {
@@ -40,9 +41,13 @@ model User {
   email         String?      @unique
   emailVerified DateTime?
   image         String?
+  username      String?      @unique
+  password      String?
   accounts      Account[]
   sessions      Session[]
   testResults   TestResult[]
+  todos         Todo[]
+  tags          Tag[]
 }
 
 model VerificationToken {
@@ -60,7 +65,74 @@ model TestResult {
   accuracy  Float
   duration  Int
   createdAt DateTime @default(now())
-  
+
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum RecurrenceRule {
+  NONE
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+model Todo {
+  id                String         @id @default(cuid())
+  title             String
+  description       String?
+  completed         Boolean        @default(false)
+  completedAt       DateTime?
+  priority          Priority       @default(MEDIUM)
+  dueDate           DateTime?
+  order             Int            @default(0)
+  recurrence        RecurrenceRule @default(NONE)
+  recurringParentId String?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  userId   String
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subtasks Subtask[]
+  tags     TodoTag[]
+
+  @@index([userId, completed, dueDate])
+}
+
+model Subtask {
+  id        String  @id @default(cuid())
+  title     String
+  completed Boolean @default(false)
+  order     Int     @default(0)
+
+  todoId String
+  todo   Todo   @relation(fields: [todoId], references: [id], onDelete: Cascade)
+}
+
+model Tag {
+  id     String @id @default(cuid())
+  name   String
+  color  String
+
+  userId String
+  user   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  todos  TodoTag[]
+
+  @@unique([userId, name])
+}
+
+model TodoTag {
+  todoId String
+  tagId  String
+  todo   Todo @relation(fields: [todoId], references: [id], onDelete: Cascade)
+  tag    Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([todoId, tagId])
 }
