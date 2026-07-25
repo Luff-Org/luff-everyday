@@ -1,36 +1,23 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
 import { ListTodo } from "lucide-react";
-import { useHasMounted } from "@/shared/lib/useHasMounted";
 import { useTodoStore } from "@/features/todos/store/useTodoStore";
 import { QuickAddBar } from "@/features/todos/components/QuickAddBar";
 import { FilterTabs } from "@/features/todos/components/FilterTabs";
 import { TagFilterChips } from "@/features/todos/components/TagFilterChips";
 import { TodoList } from "@/features/todos/components/TodoList";
-import TodosLoading from "./loading";
 
 export default function TodosPage() {
-  const mounted = useHasMounted();
-  const { status } = useSession();
-  const router = useRouter();
-  const fetchTodos = useTodoStore((s) => s.fetchTodos);
-  const fetchTags = useTodoStore((s) => s.fetchTags);
+  const loadInitialData = useTodoStore((s) => s.loadInitialData);
 
+  // Fires on mount without waiting for `useSession()`: `src/proxy.ts` already
+  // guarantees a signed-in user here, and gating on the client session put a
+  // full round trip in front of every data fetch. A dropped session surfaces as
+  // a 401, which the store turns into a redirect to /login.
   useEffect(() => {
-    if (status === "authenticated") {
-      fetchTodos();
-      fetchTags();
-    } else if (status === "unauthenticated") {
-      router.replace("/login?callbackUrl=/todos");
-    }
-  }, [status, fetchTodos, fetchTags, router]);
-
-  if (!mounted || status !== "authenticated") {
-    return <TodosLoading />;
-  }
+    loadInitialData();
+  }, [loadInitialData]);
 
   return (
     <div className="w-full flex flex-col items-center pb-20">
@@ -42,6 +29,8 @@ export default function TodosPage() {
           </h1>
         </div>
 
+        {/* Chrome is data-independent, so it renders instantly and stays put —
+            only the list swaps a skeleton for real rows. */}
         <div className="flex flex-col gap-4 mb-6">
           <QuickAddBar />
           <div className="flex flex-col gap-3">

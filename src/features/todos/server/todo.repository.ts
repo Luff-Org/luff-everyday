@@ -172,16 +172,54 @@ export const todoRepository = {
   },
 
   // ── Stats ──
-  listForStats(userId: string) {
+
+  /**
+   * Everything the profile's todo panel needs, as concurrent aggregate queries.
+   *
+   * Counting in Postgres instead of scanning every row into the app keeps this
+   * flat as a user's backlog grows: the only rows transferred are the completed
+   * ones inside the 7-day activity window. The `where` clauses line up with
+   * `@@index([userId, completed, dueDate])` and
+   * `@@index([userId, completed, completedAt])`, and running them in parallel
+   * costs roughly one round trip against a pooled remote database.
+   */
+  statsBundle(
+    userId: string,
+    window: {
+      now: Date;
+      startOfToday: Date;
+      endOfToday: Date;
+      weekStart: Date;
+    },
+  ) {
     return Promise.all([
-      prisma.todo.findMany({
+      prisma.todo.groupBy({
+        by: ["completed"],
         where: { userId },
-        select: {
-          completed: true,
-          priority: true,
-          dueDate: true,
-          completedAt: true,
+        _count: { _all: true },
+      }),
+      prisma.todo.groupBy({
+        by: ["priority"],
+        where: { userId, completed: false },
+        _count: { _all: true },
+      }),
+      prisma.todo.count({
+        where: { userId, completed: false, dueDate: { lt: window.now } },
+      }),
+      prisma.todo.count({
+        where: {
+          userId,
+          completed: false,
+          dueDate: { gte: window.startOfToday, lte: window.endOfToday },
         },
+      }),
+      prisma.todo.findMany({
+        where: {
+          userId,
+          completed: true,
+          completedAt: { gte: window.weekStart },
+        },
+        select: { completedAt: true },
       }),
       prisma.tag.count({ where: { userId } }),
     ]);

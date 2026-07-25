@@ -3,6 +3,52 @@
 Notable schema, API and infrastructure changes. Newest first. Feature-level detail lives in the
 `docs/features/*` pages; this file records what changed and what it broke.
 
+## 2026-07-25 — Loading states rebuilt, startup path unblocked
+
+No schema or API-contract changes. Behavioural and performance work.
+
+### Removed artificial and structural delays
+
+- `Providers` held the entire app behind a full-screen loader for a hardcoded **1200 ms**
+  `setTimeout` on every page load, plus however long `useSession()` took. Both gates are gone;
+  `Providers` is now just `SessionProvider`. Auth-only routes are already guarded by
+  `src/proxy.ts`, and `Header`'s new `AuthSlot` reserves its footprint while the session
+  resolves.
+- `ThemeProvider` rendered the whole tree with `visibility: hidden` until mount. Replaced by a
+  pre-paint inline script in `layout.tsx` that reads the persisted theme/font keys and stamps
+  `<html>` before first paint. `<html>` now carries `suppressHydrationWarning`.
+- `globals.css` pulled ~25 Google font families through a render-blocking `@import`. Now a
+  `media="print"` `<link>` promoted to `media="all"` on load, behind `preconnect`.
+- `/todos` waited for the client session to resolve *before* starting its data fetch, and
+  fetched todos and tags one after the other. New `useTodoStore.loadInitialData()` fires both in
+  parallel on mount and de-duplicates concurrent calls; a 401 redirects to `/login`.
+- `prefetch={false}` removed from all nav links, so route shells prefetch again.
+- Body font moved from `inter.className` to the `--app-font` variable chain, so the font picker
+  actually wins over the next/font class.
+
+### Stats queries now aggregate in Postgres
+
+Both services matched their documented design only on paper — each pulled every row for the user
+and reduced in JS.
+
+- `testRepository.statsBundle` replaces `listForStats`/`aggregate`/`bestByDuration`/`recent`:
+  `aggregate` + `groupBy duration` + the 30 charted rows, run concurrently.
+- `todoRepository.statsBundle` replaces `listForStats`: `groupBy completed`, `groupBy priority`,
+  two `count`s, the completed rows inside the 7-day window, and the tag count — concurrently,
+  covered by the existing `[userId, completed, dueDate]` and `[userId, completed, completedAt]`
+  indexes.
+
+Output shapes are unchanged; averages now come from SQL `AVG` and can differ in the last
+decimal.
+
+### Skeletons
+
+New `shared/ui/Skeleton.tsx` (`Skeleton`, `SkeletonScreen`) with theme-derived colours, a sweep
+animation, staggered delays and a `prefers-reduced-motion` fallback. Every loader on `/typing`,
+`/todos`, `/profile` and `/settings` was rebuilt to mirror the box model of the component it
+replaces. `shared/ui/LoadingScreen.tsx` deleted (its only caller was the removed auth gate).
+See [frontend.md](frontend.md#loading-states).
+
 ## 2026-07-25 — Database rebuild, task detail fields, profile dashboard, docs
 
 ### Database rebuilt from scratch (breaking)

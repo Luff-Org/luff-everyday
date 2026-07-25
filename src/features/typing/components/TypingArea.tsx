@@ -5,7 +5,6 @@ import { useTypingStore } from "@/features/typing/store/useTypingStore";
 import { clsx } from "clsx";
 import { RotateCcw } from "lucide-react";
 import { LINE_HEIGHT_PX } from "@/features/typing/lib/constants";
-import { useHasMounted } from "@/shared/lib/useHasMounted";
 
 import { Tooltip } from "@/shared/ui/Tooltip";
 
@@ -26,11 +25,9 @@ export default function TypingArea() {
   const containerRef = useRef<HTMLDivElement>(null);
   const activeWordRef = useRef<HTMLDivElement>(null);
   const caretRef = useRef<HTMLDivElement>(null);
-  const mounted = useHasMounted();
 
   // Keyboard Event Listener
   useEffect(() => {
-    if (!mounted) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (document.activeElement?.tagName === "BUTTON") {
         if (e.key === "Enter" || e.key === " ") return;
@@ -56,11 +53,10 @@ export default function TypingArea() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [inputChar, deleteChar, inputSpace, reset, mounted]);
+  }, [inputChar, deleteChar, inputSpace, reset]);
 
   // Smooth Caret logic
   useEffect(() => {
-    if (!mounted) return;
     const activeMarker = document.getElementById("caret-marker");
     if (activeMarker && caretRef.current && containerRef.current) {
       const container = containerRef.current;
@@ -72,11 +68,10 @@ export default function TypingArea() {
 
       caretRef.current.style.transform = `translate(${x}px, ${y}px)`;
     }
-  }, [currentWordIndex, currentWordInput, typedWords, originalWords, mounted]);
+  }, [currentWordIndex, currentWordInput, typedWords, originalWords]);
 
   // Scrolling logic
   useEffect(() => {
-    if (!mounted) return;
     if (activeWordRef.current && containerRef.current) {
       const container = containerRef.current;
       const topPos = activeWordRef.current.offsetTop;
@@ -89,11 +84,7 @@ export default function TypingArea() {
         container.scrollTo({ top: 0, behavior: "auto" });
       }
     }
-  }, [currentWordIndex, mounted]);
-
-  if (!mounted) {
-    return <div className="w-full h-[20rem] animate-pulse bg-background/20 rounded-2xl" />;
-  }
+  }, [currentWordIndex]);
 
   return (
     <div className="w-full flex flex-col items-start gap-4">

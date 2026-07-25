@@ -3,24 +3,31 @@
 import { useEffect } from "react";
 import { useThemeStore } from "@/shared/store/useThemeStore";
 import { useAppFontStore } from "@/shared/store/useAppFontStore";
-import { useHasMounted } from "@/shared/lib/useHasMounted";
 
+/**
+ * Keeps the document in sync with the persisted theme/font stores.
+ *
+ * First paint is handled by the pre-paint script in `layout.tsx`, which reads
+ * the same localStorage keys before the browser renders anything — so this
+ * component never has to hide the tree to avoid a flash. It only applies
+ * *changes* made after hydration (e.g. picking a theme in settings).
+ */
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const theme = useThemeStore((state) => state.theme);
   const appFontFamilyString = useAppFontStore(
     (state) => state.appFontFamilyString,
   );
-  const mounted = useHasMounted();
 
   useEffect(() => {
     document.documentElement.className = theme === "light" ? "" : theme;
-    document.body.style.fontFamily = appFontFamilyString;
-  }, [theme, appFontFamilyString]);
+  }, [theme]);
 
-  // To prevent hydration flashes, we wait until mounted
-  if (!mounted) {
-    return <div style={{ visibility: "hidden" }}>{children}</div>;
-  }
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      "--app-font",
+      appFontFamilyString,
+    );
+  }, [appFontFamilyString]);
 
   return <>{children}</>;
 }

@@ -1,6 +1,17 @@
 import type { Todo, Subtask, Tag, TodoUpdatePatch } from "@/features/todos/types";
 import type { CreateTodoInput } from "@/features/todos/validation";
 
+/** A non-2xx response, carrying the status so callers can branch on 401 etc. */
+export class ApiError extends Error {
+  constructor(
+    public readonly status: number,
+    url: string,
+  ) {
+    super(`Request to ${url} failed (${status})`);
+    this.name = "ApiError";
+  }
+}
+
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, {
     ...init,
@@ -8,7 +19,7 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
       ? { "Content-Type": "application/json", ...init?.headers }
       : init?.headers,
   });
-  if (!res.ok) throw new Error(`Request to ${url} failed (${res.status})`);
+  if (!res.ok) throw new ApiError(res.status, url);
   return res.json() as Promise<T>;
 }
 
