@@ -19,7 +19,7 @@ export function TagFilterChips() {
           "shrink-0 px-2.5 py-1 rounded-full text-[11px] font-bold border transition-colors",
           tagFilter === null
             ? "bg-primary text-background border-transparent"
-            : "border-sub-text/15 text-sub-text bg-background/40 hover:border-sub-text/30",
+            : "border-sub-text/25 text-sub-text bg-background/40 hover:border-sub-text/45",
         )}
       >
         All

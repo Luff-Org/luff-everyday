@@ -3,6 +3,21 @@
 Notable schema, API and infrastructure changes. Newest first. Feature-level detail lives in the
 `docs/features/*` pages; this file records what changed and what it broke.
 
+## 2026-07-25 — Todo image attachments
+
+New `TodoImage` model (migration `20260725163051_add_todo_images`) — up to 3 photos per todo,
+2MB each, uploaded through the existing `/api/upload` route (folder `"todos"`). Same
+full-replacement write protocol as `TodoLink`.
+
+- `POST/PATCH /api/todos*` accept an `images: {url, publicId}[]` field (max 3); response `Todo`
+  now includes `images` alongside `links`.
+- `POST /api/upload` size limit is now per-folder instead of a flat 5MB: `avatars` stays 5MB,
+  `todos` is capped at 2MB (server-enforced; the client also checks before uploading).
+- New `TodoImageUpload` component (`features/todos/components/`), used in both `QuickAddBar`
+  (create) and `TaskDetailDrawer` (edit).
+- Deleting a `Todo` cascades `TodoImage` rows; the Cloudinary asset itself is not cleaned up
+  (same gap as the profile avatar today).
+
 ## 2026-07-25 — Loading states rebuilt, startup path unblocked
 
 No schema or API-contract changes. Behavioural and performance work.

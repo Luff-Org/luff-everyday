@@ -116,10 +116,11 @@ model Todo {
   updatedAt         DateTime       @updatedAt
 
   userId   String
-  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   subtasks Subtask[]
   tags     TodoTag[]
   links    TodoLink[]
+  images   TodoImage[]
 
   // Dependencies (self-relation via TodoDependency join).
   dependsOn TodoDependency[] @relation("BlockedTask") // tasks this one waits on
@@ -134,6 +135,20 @@ model TodoLink {
   id        String   @id @default(cuid())
   url       String
   title     String?
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  todoId String
+  todo   Todo   @relation(fields: [todoId], references: [id], onDelete: Cascade)
+
+  @@index([todoId])
+}
+
+/// Attached photo — max 3 per todo, ≤2MB each (enforced app-side), stored in Cloudinary.
+model TodoImage {
+  id        String   @id @default(cuid())
+  url       String
+  publicId  String
   order     Int      @default(0)
   createdAt DateTime @default(now())
 

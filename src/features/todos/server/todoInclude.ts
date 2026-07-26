@@ -5,6 +5,7 @@ export const TODO_INCLUDE = {
   subtasks: { orderBy: { order: "asc" } },
   tags: { include: { tag: true } },
   links: { orderBy: { order: "asc" } },
+  images: { orderBy: { order: "asc" } },
   // Dependencies: the tasks this todo waits on, with just enough of each blocker
   // to render a chip and know whether it still gates completion.
   dependsOn: {

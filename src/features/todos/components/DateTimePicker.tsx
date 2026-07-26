@@ -100,8 +100,8 @@ export function DateTimePicker({
           e.stopPropagation();
           open ? setOpen(false) : openPicker();
         }}
-        className={`flex items-center gap-1.5 bg-background/40 border border-sub-text/20 rounded-lg px-2.5 py-1.5 text-xs font-bold outline-none focus:border-primary/50 transition-colors ${
-          value ? "text-foreground" : "text-sub-text/60"
+        className={`flex items-center gap-1.5 bg-background/40 border border-sub-text/35 rounded-lg px-2.5 py-1.5 text-xs font-bold outline-none focus:border-primary/50 transition-colors ${
+          value ? "text-foreground" : "text-sub-text/80"
         }`}
       >
         <CalendarIcon className="w-3.5 h-3.5" />
@@ -121,7 +121,7 @@ export function DateTimePicker({
             e.stopPropagation();
             onChange(null);
           }}
-          className="absolute -right-1.5 -top-1.5 w-4 h-4 rounded-full bg-sub-text/20 text-sub-text hover:bg-error hover:text-white flex items-center justify-center transition-colors"
+          className="absolute -right-1.5 -top-1.5 w-4 h-4 rounded-full bg-sub-text/35 text-sub-text hover:bg-error hover:text-white flex items-center justify-center transition-colors"
         >
           <X className="w-2.5 h-2.5" />
         </button>
@@ -134,7 +134,7 @@ export function DateTimePicker({
             ref={popoverRef}
             onClick={(e) => e.stopPropagation()}
             style={{ position: "fixed", top: coords.top, left: coords.left, zIndex: 9999 }}
-            className="bg-background border border-sub-text/20 rounded-2xl shadow-2xl p-3 w-fit"
+            className="bg-background border border-sub-text/35 rounded-2xl shadow-2xl p-3 w-fit"
           >
             <DayPicker
               mode="single"
@@ -151,15 +151,15 @@ export function DateTimePicker({
                   ),
               }}
             />
-            <div className="flex items-center gap-2 mt-2 pt-3 border-t border-sub-text/10">
-              <span className="text-[10px] font-black uppercase tracking-widest text-sub-text/50 shrink-0">
+            <div className="flex items-center gap-2 mt-2 pt-3 border-t border-sub-text/20">
+              <span className="text-[10px] font-black uppercase tracking-widest text-sub-text/70 shrink-0">
                 Time
               </span>
               <input
                 type="time"
                 value={value ? toTimeString(value) : "09:00"}
                 onChange={(e) => handleTimeChange(e.target.value)}
-                className="flex-1 bg-background/40 border border-sub-text/20 rounded-lg px-2 py-1 text-xs font-bold text-foreground outline-none focus:border-primary/50"
+                className="flex-1 bg-background/40 border border-sub-text/35 rounded-lg px-2 py-1 text-xs font-bold text-foreground outline-none focus:border-primary/50"
               />
             </div>
             <button

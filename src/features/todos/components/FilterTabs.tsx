@@ -15,7 +15,7 @@ export function FilterTabs() {
   const setFilter = useTodoStore((s) => s.setFilter);
 
   return (
-    <div className="flex items-center gap-1 bg-background/30 backdrop-blur-md p-1 rounded-xl border border-sub-text/10 w-fit">
+    <div className="flex items-center gap-1 bg-background/30 backdrop-blur-md p-1 rounded-xl border border-sub-text/20 w-fit">
       {FILTERS.map((f) => (
         <button
           key={f.id}

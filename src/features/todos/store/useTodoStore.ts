@@ -8,9 +8,10 @@ import type {
   Tag,
   TodoFilter,
   TodoUpdatePatch,
+  TodoImageInput,
 } from "@/features/todos/types";
 
-export type { Todo, Subtask, Tag, TodoFilter, TodoUpdatePatch };
+export type { Todo, Subtask, Tag, TodoFilter, TodoUpdatePatch, TodoImageInput };
 
 interface TodoState {
   todos: Todo[];
@@ -28,6 +29,7 @@ interface TodoState {
     raw: string;
     dueDate?: string | null;
     description?: string | null;
+    images?: TodoImageInput[];
   }) => Promise<void>;
   toggleComplete: (id: string) => Promise<void>;
   updateTodo: (id: string, patch: TodoUpdatePatch) => Promise<void>;
@@ -129,7 +131,7 @@ export const useTodoStore = create<TodoState>((set, get) => {
       }
     },
 
-    addTodo: async ({ raw, dueDate: dueDateOverride, description }) => {
+    addTodo: async ({ raw, dueDate: dueDateOverride, description, images }) => {
       const parsed = parseQuickAdd(raw);
       if (!parsed.title) return;
 
@@ -164,6 +166,14 @@ export const useTodoStore = create<TodoState>((set, get) => {
         userId: "",
         subtasks: [],
         links: [],
+        images: (images ?? []).map((img, i) => ({
+          id: `temp-${crypto.randomUUID()}`,
+          url: img.url,
+          publicId: img.publicId,
+          order: i,
+          createdAt: new Date().toISOString(),
+          todoId: tempId,
+        })),
         dependsOn: [],
         tags: parsed.tags.map((name) => ({
           todoId: tempId,
@@ -176,7 +186,7 @@ export const useTodoStore = create<TodoState>((set, get) => {
 
       await commit(
         snapshot,
-        () => todosApi.create({ raw, dueDate: dueDateOverride, description }),
+        () => todosApi.create({ raw, dueDate: dueDateOverride, description, images }),
         "Couldn't add that todo.",
         (created) => {
           set((state) => ({
@@ -234,10 +244,16 @@ export const useTodoStore = create<TodoState>((set, get) => {
         return;
       }
       const snapshot = get().todos;
-      // tags/links/dependsOn are relations whose wire shape differs from the
-      // patch shape (ids need resolving server-side) — apply scalars locally
+      // tags/links/images/dependsOn are relations whose wire shape differs from
+      // the patch shape (ids need resolving server-side) — apply scalars locally
       // and let the server response reconcile the relations.
-      const { tags: _tags, links: _links, dependsOn: _dependsOn, ...localPatch } = patch;
+      const {
+        tags: _tags,
+        links: _links,
+        images: _images,
+        dependsOn: _dependsOn,
+        ...localPatch
+      } = patch;
       set({
         todos: snapshot.map((t) => (t.id === id ? { ...t, ...localPatch } : t)),
       });

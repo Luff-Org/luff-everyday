@@ -20,10 +20,11 @@ import { PriorityBadge } from "./PriorityBadge";
 import { TagChip } from "./TagChip";
 import { DateTimePicker } from "./DateTimePicker";
 import { SubtaskList } from "./SubtaskList";
+import { TodoImageUpload } from "./TodoImageUpload";
 
-const labelClass = "text-[10px] font-black uppercase tracking-widest text-sub-text/50";
+const labelClass = "text-[10px] font-black uppercase tracking-widest text-sub-text/70";
 const fieldClass =
-  "bg-background/40 border border-sub-text/20 rounded-lg px-2.5 py-1.5 text-xs font-bold text-foreground outline-none focus:border-primary/50 transition-colors placeholder:text-sub-text/40 placeholder:font-medium";
+  "bg-background/40 border border-sub-text/35 rounded-lg px-2.5 py-1.5 text-xs font-bold text-foreground outline-none focus:border-primary/50 transition-colors placeholder:text-sub-text/60 placeholder:font-medium";
 
 const ENERGY_LEVELS: EnergyLevel[] = ["LOW", "MEDIUM", "HIGH"];
 const ENERGY_STYLES: Record<EnergyLevel, string> = {
@@ -102,9 +103,9 @@ export function TaskDetailDrawer({ todo, onClose }: { todo: Todo; onClose: () =>
         animate={{ x: 0 }}
         exit={{ x: "100%" }}
         transition={{ type: "spring", damping: 32, stiffness: 300 }}
-        className="fixed top-0 right-0 h-full w-full max-w-md bg-background border-l border-sub-text/20 z-[1000] overflow-y-auto"
+        className="fixed top-0 right-0 h-full w-full max-w-md bg-background border-l border-sub-text/35 z-[1000] overflow-y-auto"
       >
-        <div className="flex items-start justify-between gap-3 p-5 border-b border-sub-text/10 sticky top-0 bg-background/95 backdrop-blur-md">
+        <div className="flex items-start justify-between gap-3 p-5 border-b border-sub-text/20 sticky top-0 bg-background/95 backdrop-blur-md">
           <input
             defaultValue={todo.title}
             onBlur={(e) => {
@@ -157,13 +158,13 @@ export function TaskDetailDrawer({ todo, onClose }: { todo: Todo; onClose: () =>
                     className={`p-1.5 rounded-lg border transition-colors ${
                       todo.energyLevel === level
                         ? "border-primary/50 bg-primary/10"
-                        : "border-sub-text/15 hover:border-sub-text/30"
+                        : "border-sub-text/25 hover:border-sub-text/45"
                     }`}
                     title={level}
                   >
                     <Zap
                       className={`w-3.5 h-3.5 ${
-                        todo.energyLevel === level ? ENERGY_STYLES[level] : "text-sub-text/40"
+                        todo.energyLevel === level ? ENERGY_STYLES[level] : "text-sub-text/60"
                       }`}
                     />
                   </button>
@@ -194,7 +195,7 @@ export function TaskDetailDrawer({ todo, onClose }: { todo: Todo; onClose: () =>
             <div className="flex flex-col gap-1.5">
               <span className={labelClass}>Estimate (min)</span>
               <div className="flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 text-sub-text/50 shrink-0" />
+                <Clock className="w-3.5 h-3.5 text-sub-text/70 shrink-0" />
                 <input
                   type="number"
                   min={0}
@@ -229,7 +230,7 @@ export function TaskDetailDrawer({ todo, onClose }: { todo: Todo; onClose: () =>
             <div className="flex flex-col gap-1.5 col-span-2">
               <span className={labelClass}>Location</span>
               <div className="flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 text-sub-text/50 shrink-0" />
+                <MapPin className="w-3.5 h-3.5 text-sub-text/70 shrink-0" />
                 <input
                   defaultValue={todo.location ?? ""}
                   onBlur={(e) => {
@@ -263,7 +264,7 @@ export function TaskDetailDrawer({ todo, onClose }: { todo: Todo; onClose: () =>
             <div className="flex flex-col gap-1.5">
               {todo.links.map((link) => (
                 <div key={link.id} className="group flex items-center gap-2">
-                  <Link2 className="w-3.5 h-3.5 text-sub-text/40 shrink-0" />
+                  <Link2 className="w-3.5 h-3.5 text-sub-text/60 shrink-0" />
                   <a
                     href={link.url}
                     target="_blank"
@@ -275,7 +276,7 @@ export function TaskDetailDrawer({ todo, onClose }: { todo: Todo; onClose: () =>
                   </a>
                   <button
                     onClick={() => removeLink(link.id)}
-                    className="opacity-0 group-hover:opacity-100 text-sub-text/50 hover:text-error transition-opacity"
+                    className="opacity-0 group-hover:opacity-100 text-sub-text/70 hover:text-error transition-opacity"
                   >
                     <X className="w-3 h-3" />
                   </button>
@@ -308,16 +309,21 @@ export function TaskDetailDrawer({ todo, onClose }: { todo: Todo; onClose: () =>
             </div>
           </div>
 
+          <TodoImageUpload
+            images={todo.images.map((img) => ({ url: img.url, publicId: img.publicId }))}
+            onChange={(images) => updateTodo(todo.id, { images })}
+          />
+
           <div className="flex flex-col gap-1.5">
             <span className={labelClass}>Blocked by</span>
             <div className="flex flex-col gap-1.5">
               {todo.dependsOn.map((dep) => (
                 <div key={dep.blockingId} className="group flex items-center gap-2">
-                  <GitBranch className="w-3.5 h-3.5 text-sub-text/40 shrink-0" />
+                  <GitBranch className="w-3.5 h-3.5 text-sub-text/60 shrink-0" />
                   <span
                     className={`flex-1 min-w-0 text-xs truncate ${
                       dep.blocking.completed
-                        ? "text-sub-text/40 line-through"
+                        ? "text-sub-text/60 line-through"
                         : "text-foreground"
                     }`}
                   >
@@ -330,7 +336,7 @@ export function TaskDetailDrawer({ todo, onClose }: { todo: Todo; onClose: () =>
                   )}
                   <button
                     onClick={() => removeDependency(dep.blockingId)}
-                    className="opacity-0 group-hover:opacity-100 text-sub-text/50 hover:text-error transition-opacity"
+                    className="opacity-0 group-hover:opacity-100 text-sub-text/70 hover:text-error transition-opacity"
                   >
                     <X className="w-3 h-3" />
                   </button>
@@ -344,12 +350,12 @@ export function TaskDetailDrawer({ todo, onClose }: { todo: Todo; onClose: () =>
                   className={`w-full ${fieldClass}`}
                 />
                 {depQuery.trim() && depCandidates.length > 0 && (
-                  <div className="absolute left-0 right-0 mt-1 bg-background border border-sub-text/20 rounded-lg shadow-xl z-10 overflow-hidden">
+                  <div className="absolute left-0 right-0 mt-1 bg-background border border-sub-text/35 rounded-lg shadow-xl z-10 overflow-hidden">
                     {depCandidates.map((t) => (
                       <button
                         key={t.id}
                         onClick={() => addDependency(t.id)}
-                        className="w-full text-left px-2.5 py-1.5 text-xs text-foreground hover:bg-sub-text/10 truncate"
+                        className="w-full text-left px-2.5 py-1.5 text-xs text-foreground hover:bg-sub-text/20 truncate"
                       >
                         {t.title}
                       </button>

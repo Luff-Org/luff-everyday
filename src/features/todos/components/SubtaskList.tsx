@@ -30,26 +30,26 @@ export function SubtaskList({
           <button
             onClick={() => toggleSubtask(todoId, subtask.id)}
             className={`w-3.5 h-3.5 rounded-full border shrink-0 transition-colors ${
-              subtask.completed ? "bg-primary border-primary" : "border-sub-text/40"
+              subtask.completed ? "bg-primary border-primary" : "border-sub-text/60"
             }`}
           />
           <span
             className={`text-xs flex-1 ${
-              subtask.completed ? "text-sub-text/40 line-through" : "text-sub-text"
+              subtask.completed ? "text-sub-text/60 line-through" : "text-sub-text"
             }`}
           >
             {subtask.title}
           </span>
           <button
             onClick={() => deleteSubtask(todoId, subtask.id)}
-            className="opacity-0 group-hover:opacity-100 text-sub-text/50 hover:text-error transition-opacity"
+            className="opacity-0 group-hover:opacity-100 text-sub-text/70 hover:text-error transition-opacity"
           >
             <X className="w-3 h-3" />
           </button>
         </div>
       ))}
       <div className="flex items-center gap-2 mt-1">
-        <Plus className="w-3 h-3 text-sub-text/40 shrink-0" />
+        <Plus className="w-3 h-3 text-sub-text/60 shrink-0" />
         <input
           value={value}
           onChange={(e) => setValue(e.target.value)}
@@ -57,7 +57,7 @@ export function SubtaskList({
             if (e.key === "Enter") submit();
           }}
           placeholder="Add subtask"
-          className="flex-1 bg-transparent outline-none text-xs text-foreground placeholder:text-sub-text/40"
+          className="flex-1 bg-transparent outline-none text-xs text-foreground placeholder:text-sub-text/60"
         />
       </div>
     </div>

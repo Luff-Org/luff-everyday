@@ -17,6 +17,7 @@ erDiagram
     User ||--o{ Tag : "owns"
     Todo ||--o{ Subtask : "has"
     Todo ||--o{ TodoLink : "has"
+    Todo ||--o{ TodoImage : "has"
     Todo ||--o{ TodoTag : ""
     Tag  ||--o{ TodoTag : ""
     Todo ||--o{ TodoDependency : "blocked (depends on)"
@@ -64,6 +65,14 @@ erDiagram
         string todoId FK
         string url
         string title
+        int order
+        datetime createdAt
+    }
+    TodoImage {
+        string id PK
+        string todoId FK
+        string url
+        string publicId "Cloudinary public id, for deletion"
         int order
         datetime createdAt
     }
@@ -177,6 +186,16 @@ cascade. Indexed on `todoId`. Zod caps: `url` ≤2000 chars and must parse as a 
 ≤200 chars, ≤50 links per todo. Writes are **full replacement** (delete-all + createMany in
 one transaction), so `order` is the array index of the submitted list.
 
+### `TodoImage`
+
+Attached photos. `id`, `url`, `publicId` (Cloudinary public id, kept so an image can be
+deleted from Cloudinary later), `order` (`0`), `createdAt`, `todoId` FK cascade. Indexed on
+`todoId`. Zod caps: `url` ≤2000 chars and must parse as a URL, `publicId` ≤300 chars, **max 3
+images per todo**. Uploads go through `/api/upload` first (folder `todos`), which rejects
+files over 2MB or outside `image/{png,jpeg,webp,gif}` before Cloudinary ever sees them.
+Writes are **full replacement** (delete-all + createMany in one transaction), so `order` is
+the array index of the submitted list — same protocol as `TodoLink`.
+
 ### `TodoDependency`
 
 Self-relation join table: "`blocked` waits on `blocking`".
@@ -220,9 +239,11 @@ No extra index — queries are always `where userId` with small per-user row cou
 ## Cascade summary
 
 Deleting a `User` removes: `Account`, `Session`, `TestResult`, `Todo`, `Tag` rows. Deleting a
-`Todo` removes its `Subtask`, `TodoLink`, `TodoTag`, and every `TodoDependency` edge on either
-side. Deleting a `Tag` removes its `TodoTag` links. Nothing else is reachable, so a user
-delete is a complete erase.
+`Todo` removes its `Subtask`, `TodoLink`, `TodoImage`, `TodoTag`, and every `TodoDependency`
+edge on either side. Deleting a `Tag` removes its `TodoTag` links. Nothing else is reachable,
+so a user delete is a complete erase. Note: cascading a `Todo`/`TodoImage` row only deletes
+the DB record — the underlying Cloudinary asset is not currently cleaned up (same as the
+profile avatar on replace).
 
 ## Invariants not expressible in the schema
 

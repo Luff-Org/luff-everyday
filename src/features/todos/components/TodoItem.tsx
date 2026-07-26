@@ -10,12 +10,14 @@ import { TagChip } from "./TagChip";
 import { SubtaskList } from "./SubtaskList";
 import { DateTimePicker } from "./DateTimePicker";
 import { TaskDetailDrawer } from "./TaskDetailDrawer";
+import { ImagePreviewModal } from "./ImagePreviewModal";
 
-const labelClass = "text-[10px] font-black uppercase tracking-widest text-sub-text/50";
+const labelClass = "text-[10px] font-black uppercase tracking-widest text-sub-text/70";
 
 export function TodoItem({ todo }: { todo: Todo }) {
   const [expanded, setExpanded] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const toggleComplete = useTodoStore((s) => s.toggleComplete);
   const updateTodo = useTodoStore((s) => s.updateTodo);
   const deleteTodo = useTodoStore((s) => s.deleteTodo);
@@ -29,7 +31,7 @@ export function TodoItem({ todo }: { todo: Todo }) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
-      className="group bg-background/30 backdrop-blur-md border border-sub-text/20 rounded-2xl p-4"
+      className="group border border-card-border rounded-2xl p-4"
     >
       <div className="flex items-start gap-3">
         <button
@@ -40,8 +42,8 @@ export function TodoItem({ todo }: { todo: Todo }) {
             todo.completed
               ? "bg-primary border-primary"
               : isBlocked
-                ? "border-sub-text/20 cursor-not-allowed"
-                : "border-sub-text/40 hover:border-primary"
+                ? "border-sub-text/35 cursor-not-allowed"
+                : "border-sub-text/60 hover:border-primary"
           }`}
         />
 
@@ -50,7 +52,7 @@ export function TodoItem({ todo }: { todo: Todo }) {
             {isBlocked && <Lock className="w-3.5 h-3.5 text-amber-500 shrink-0" />}
             <span
               className={`font-bold text-sm ${
-                todo.completed ? "text-sub-text/40 line-through" : "text-foreground"
+                todo.completed ? "text-sub-text/60 line-through" : "text-foreground"
               }`}
             >
               {todo.title}
@@ -82,10 +84,25 @@ export function TodoItem({ todo }: { todo: Todo }) {
             </div>
           )}
 
+          {todo.images.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {todo.images.map((img) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  key={img.id}
+                  src={img.url}
+                  alt=""
+                  onClick={() => setPreviewUrl(img.url)}
+                  className="h-12 w-12 rounded-lg object-cover border border-sub-text/35 cursor-zoom-in hover:opacity-90 transition-opacity"
+                />
+              ))}
+            </div>
+          )}
+
           {todo.description && !expanded && (
             <button
               onClick={() => setExpanded(true)}
-              className="block text-xs text-sub-text/60 mt-2 line-clamp-1 text-left hover:text-sub-text"
+              className="block text-xs text-sub-text/80 mt-2 line-clamp-1 text-left hover:text-sub-text"
             >
               {todo.description}
             </button>
@@ -113,7 +130,7 @@ export function TodoItem({ todo }: { todo: Todo }) {
                 }}
                 placeholder="Add a description..."
                 rows={2}
-                className="w-full bg-background/40 border border-sub-text/15 rounded-lg px-3 py-2 text-xs text-foreground placeholder:text-sub-text/40 outline-none focus:border-primary/40 resize-none"
+                className="w-full bg-background/40 border border-sub-text/25 rounded-lg px-3 py-2 text-xs text-foreground placeholder:text-sub-text/60 outline-none focus:border-primary/40 resize-none"
               />
 
               <div className="flex flex-col gap-1">
@@ -156,6 +173,9 @@ export function TodoItem({ todo }: { todo: Todo }) {
         </div>
       </div>
       {detailOpen && <TaskDetailDrawer todo={todo} onClose={() => setDetailOpen(false)} />}
+      {previewUrl && (
+        <ImagePreviewModal url={previewUrl} onClose={() => setPreviewUrl(null)} />
+      )}
     </motion.div>
   );
 }

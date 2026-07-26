@@ -17,6 +17,13 @@ const linkSchema = z.object({
 });
 const linkList = z.array(linkSchema).max(50);
 
+/** A single attached photo, already uploaded to Cloudinary via `/api/upload`. */
+const imageSchema = z.object({
+  url: z.string().trim().url().max(2000),
+  publicId: z.string().trim().min(1).max(300),
+});
+const imageList = z.array(imageSchema).max(3);
+
 /** Full-replacement set of blocker task ids (cuids). */
 const dependsOnList = z.array(z.string().min(1)).max(50);
 
@@ -38,6 +45,7 @@ export const createTodoSchema = z.object({
   location: shortText.nullish(),
   tags: tagList.optional(),
   links: linkList.optional(),
+  images: imageList.optional(),
 });
 
 export const updateTodoSchema = z.object({
@@ -56,6 +64,7 @@ export const updateTodoSchema = z.object({
   order: z.number().int().optional(),
   tags: tagList.optional(),
   links: linkList.optional(),
+  images: imageList.optional(),
   dependsOn: dependsOnList.optional(),
 });
 
