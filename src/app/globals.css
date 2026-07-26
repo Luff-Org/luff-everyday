@@ -14,8 +14,9 @@
     --error: #ef4444;
     --correct: #0f172a;
     --sub-text: #64748b;
-    --card-bg: #ffffff;
-    --card-border: #e2e8f0;
+    /* Kept in step with the per-theme card tokens generated in layout.tsx. */
+    --card-bg: color-mix(in srgb, var(--foreground) 11%, var(--background));
+    --card-border: color-mix(in srgb, var(--foreground) 30%, var(--background));
   }
 
   body {

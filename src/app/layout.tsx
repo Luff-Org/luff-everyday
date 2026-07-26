@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/shared/components/ThemeProvider";
 import DynamicFavicon from "@/shared/components/DynamicFavicon";
 import Header from "@/shared/components/Header";
 import { THEMES, DEFAULT_THEME, STORAGE_KEYS } from "@/shared/lib/constants";
+import { readableOn } from "@/shared/lib/contrast";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -76,21 +77,34 @@ export default function RootLayout({
     return luminance < 0.5 ? "dark" : "light";
   };
 
-  const themeStyles = THEMES.map(
-    (t) => `
+  const themeStyles = THEMES.map((t) => {
+    // Palettes are authored for character, not legibility, so every text-role
+    // colour is floored against its own background before it ships. See
+    // `shared/lib/contrast.ts` for why this is derived rather than hand-tuned.
+    const fg = readableOn(t.fg, t.bg, 4.5); // AA body text
+    const sub = readableOn(t.sub, t.bg, 3); // AA large / secondary UI text
+    // `primary` doubles as a button *fill* under `text-background`, and
+    // contrast is symmetric, so the 4.5 floor covers both directions at once.
+    const primary = readableOn(t.primary, t.bg, 4.5);
+    const error = readableOn(t.error, t.bg, 3);
+
+    return `
     .${t.id} {
       --background: ${t.bg};
-      --foreground: ${t.fg};
-      --primary: ${t.primary};
-      --error: ${t.error};
-      --correct: ${t.fg};
-      --sub-text: ${t.sub};
-      --card-bg: ${t.bg};
-      --card-border: ${t.sub};
+      --foreground: ${fg};
+      --primary: ${primary};
+      --error: ${error};
+      --correct: ${fg};
+      --sub-text: ${sub};
+      /* Cards must read as raised off the page, so they are derived from the
+         theme's own fg/bg rather than reusing --background (identical to the
+         page) or --sub-text (too close to bg in the dark themes). */
+      --card-bg: color-mix(in srgb, ${fg} 11%, ${t.bg});
+      --card-border: color-mix(in srgb, ${fg} 30%, ${t.bg});
       color-scheme: ${colorScheme(t.bg)};
     }
-  `,
-  ).join("\n");
+  `;
+  }).join("\n");
 
   return (
     // The pre-paint script mutates <html>'s class and style; React must not

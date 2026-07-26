@@ -25,7 +25,7 @@ export function EmptyState({ filter }: { filter: TodoFilter }) {
 
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
-      <ListTodo className="w-10 h-10 mb-4 text-sub-text/30" />
+      <ListTodo className="w-10 h-10 mb-4 text-sub-text/45" />
       <h3 className="text-foreground font-bold mb-1">{copy.title}</h3>
       <p className="text-sub-text text-sm">{copy.desc}</p>
     </div>

@@ -154,6 +154,35 @@ the render before the first request starts.
 `FontDef`s. Tailwind classes reference the theme's CSS custom properties (`text-primary`,
 `text-sub-text`), which `layout.tsx` emits as one class-per-theme stylesheet.
 
+### Opacity modifiers need `<alpha-value>`
+
+`tailwind.config.ts` maps each colour through
+`color-mix(in srgb, var(--x) calc(<alpha-value> * 100%), transparent)`, **not** a bare
+`var(--x)`. Tailwind cannot split a bare `var()` into channels, so with the plain form every
+opacity modifier (`bg-card-bg/30`, `text-sub-text/50`) silently compiles to *no CSS at all* —
+the utility just vanishes from the stylesheet. If you add a theme colour, use the `alpha()`
+helper in that config; don't write `var(--x)` directly.
+
+### Contrast is enforced, not hand-tuned
+
+Palettes are authored for character, and an audit found 23/32 themes with `sub` under 3:1
+against their own background (lowest 1.3:1), 4 with an unreadable `fg`, and 9 with unreadable
+primary buttons. So `layout.tsx` runs every text-role colour through `readableOn()`
+(`shared/lib/contrast.ts`) before emitting it: `fg` and `primary` to 4.5:1, `sub` and `error`
+to 3:1. `primary` gets the higher floor because it doubles as a button *fill* under
+`text-background`, and contrast is symmetric. Colours already clearing their floor pass
+through byte-identical.
+
+Add a theme by dropping a `ThemeDef` into `THEMES` — no contrast hand-checking needed, and
+`contrast.test.ts` asserts the floors hold for every shipped theme. Note `DynamicFavicon` and
+`MascotCat` read the *raw* `THEMES` hex values, which is intentional: neither renders text.
+
+`--card-bg` / `--card-border` are likewise derived (`color-mix` of the corrected `fg` over
+`bg`, at 11% and 30%) rather than reusing `--background` (identical to the page, so surfaces
+disappear) or `--sub-text` (too close to `bg` in the dark themes). Todo cards deliberately use
+only `--card-border` on a transparent fill — a filled surface was tried and rejected as too
+heavy; `--card-bg` remains in use for the typing `<kbd>` chips and toast borders.
+
 **First paint is set before React runs.** A small inline script in `<head>` reads the same
 localStorage keys the zustand stores persist to (`STORAGE_KEYS`) and stamps the theme class and
 `--app-font` onto `<html>`. `ThemeProvider` then only applies *changes* made after hydration.

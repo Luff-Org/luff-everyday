@@ -26,6 +26,7 @@ export type Subtask = Todo["subtasks"][number];
 export type TodoTagWithTag = Todo["tags"][number];
 export type Tag = TodoTagWithTag["tag"];
 export type TodoLink = Todo["links"][number];
+export type TodoImage = Todo["images"][number];
 /** A dependency edge with the summarized blocker task it points at. */
 export type TodoDependency = Todo["dependsOn"][number];
 export type BlockerTodo = TodoDependency["blocking"];
@@ -66,6 +67,8 @@ export interface TodoUpdatePatch {
   tags?: string[];
   /** Full replacement set of attached links. */
   links?: TodoLinkInput[];
+  /** Full replacement set of attached images (max 3). */
+  images?: TodoImageInput[];
   /** Full replacement set of blocker task ids (tasks this todo waits on). */
   dependsOn?: string[];
 }
@@ -74,4 +77,10 @@ export interface TodoUpdatePatch {
 export interface TodoLinkInput {
   url: string;
   title?: string | null;
+}
+
+/** One photo attached to a task, already uploaded to Cloudinary (create/replace payload). */
+export interface TodoImageInput {
+  url: string;
+  publicId: string;
 }

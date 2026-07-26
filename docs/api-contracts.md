@@ -33,8 +33,8 @@ guards page routes only — `/api/*` relies on `requireUser()`.
 | POST | `/api/auth/register` | — | Create a credentials account |
 | GET | `/api/todos` | ✅ | List the user's todos with relations |
 | POST | `/api/todos` | ✅ | Create a todo (quick-add string or explicit fields) |
-| PATCH | `/api/todos/{id}` | ✅ | Partial update, incl. tags/links/dependencies |
-| DELETE | `/api/todos/{id}` | ✅ | Delete a todo (cascades subtasks/links/tags/deps) |
+| PATCH | `/api/todos/{id}` | ✅ | Partial update, incl. tags/links/images/dependencies |
+| DELETE | `/api/todos/{id}` | ✅ | Delete a todo (cascades subtasks/links/images/tags/deps) |
 | POST | `/api/todos/{id}/complete` | ✅ | Complete, honouring blockers + recurrence |
 | POST | `/api/todos/reorder` | ✅ | Bulk-set manual `order` |
 | GET | `/api/todos/tags` | ✅ | List the user's tags |
@@ -88,6 +88,11 @@ nested in the complete response. Relations always follow `TODO_INCLUDE`.
     { "id": "…", "url": "https://example.com", "title": "ref", "order": 0,
       "createdAt": "2026-07-25T12:48:53.872Z", "todoId": "…" }
   ],
+  "images": [
+    { "id": "…", "url": "https://res.cloudinary.com/…/loop-everyday/todos/cms.../abc123.png",
+      "publicId": "loop-everyday/todos/cms.../abc123", "order": 0,
+      "createdAt": "2026-07-25T12:48:53.872Z", "todoId": "…" }
+  ],
   "dependsOn": [
     { "blockedId": "…", "blockingId": "…",
       "blocking": { "id": "…", "title": "blocker task", "completed": false, "priority": "MEDIUM" } }
@@ -95,7 +100,7 @@ nested in the complete response. Relations always follow `TODO_INCLUDE`.
 }
 ```
 
-Ordering inside relations: `subtasks` and `links` by `order` ascending; `dependsOn`
+Ordering inside relations: `subtasks`, `links`, and `images` by `order` ascending; `dependsOn`
 unordered; the todo list itself by `createdAt` descending.
 
 ### `Subtask`
@@ -187,6 +192,7 @@ Request (`createTodoSchema`) — all optional:
 | `location` | string \| null | ≤120 |
 | `tags` | string[] | each trimmed+lowercased, 1–30 chars; overrides parsed tags; tags are upserted per user |
 | `links` | `{url, title?}[]` | ≤50; `url` must parse as a URL, ≤2000 chars; `title` ≤200; `order` = array index |
+| `images` | `{url, publicId}[]` | **max 3**; `url` must parse as a URL, ≤2000 chars; `publicId` ≤300 chars; `order` = array index. Each entry is the response of a prior `POST /api/upload` call (folder `todos`) — this endpoint does not accept raw files |
 
 Title resolution: `title ?? parsed.title`, trimmed. If empty → 400 `{"error":"Title is required"}`.
 
@@ -209,12 +215,16 @@ Partial update. Omitted keys are untouched; `null` clears a nullable column.
 Request (`updateTodoSchema`) — all optional: `title`, `description`, `notes`, `startDate`,
 `dueDate`, `priority`, `estimatedMinutes`, `energyLevel`, `context`, `location`,
 `recurrence` (`NONE|DAILY|WEEKLY|MONTHLY`), `completed` (bool), `order` (int),
-`tags` (string[]), `links` (`{url,title?}[]`), `dependsOn` (string[] of todo ids).
+`tags` (string[]), `links` (`{url,title?}[]`), `images` (`{url,publicId}[]`, max 3),
+`dependsOn` (string[] of todo ids).
 
-Relation semantics — all three are **full replacement**, not merge:
+Relation semantics — all four are **full replacement**, not merge:
 
 - `tags` — existing `TodoTag` links are deleted, tags upserted per user, new links created.
 - `links` — existing `TodoLink` rows deleted, submitted list re-created with `order` = index.
+- `images` — existing `TodoImage` rows deleted, submitted list re-created with `order` = index.
+  Uploading happens client-side against `POST /api/upload` first; this endpoint just persists
+  the resulting `{url, publicId}` pairs.
 - `dependsOn` — the set of blockers this todo waits on. Deduplicated; a self-reference is
   silently dropped. Every id must be a todo owned by the caller, and the resulting graph must
   be acyclic.
@@ -244,7 +254,7 @@ curl -X PATCH http://localhost:3000/api/todos/$ID -b cookies.txt \
 | 200 | `{"success":true}` |
 | 404 | `{"error":"Not found"}` |
 
-Cascades to subtasks, links, tag links, and dependency edges on both sides. A spawned
+Cascades to subtasks, links, images, tag links, and dependency edges on both sides. A spawned
 recurring child is **not** deleted (its `recurringParentId` just dangles).
 
 ### `POST /api/todos/{id}/complete`
@@ -428,16 +438,21 @@ the header avatar/name reads from the session, not a refetch.
 
 ### `POST /api/upload`
 
-Generic image upload, not tied to any one feature — used today by the profile avatar editor;
-todo image attachments will call the same endpoint. Streams the file straight to Cloudinary
+Generic image upload, not tied to any one feature — used by the profile avatar editor and the
+todo image attachment picker. Streams the file straight to Cloudinary
 (`src/shared/lib/cloudinary.ts`); nothing is persisted locally or in Postgres.
 
 Request is `multipart/form-data`:
 
 | Field | Required | Notes |
 | :--- | :--- | :--- |
-| `file` | ✅ | Image file. `image/png`, `image/jpeg`, `image/webp`, or `image/gif`. Max 5MB. |
-| `folder` | ✅ | One of `"avatars"` \| `"todos"` — the Cloudinary bucket to upload into. New callers add their own value here and to the `folderSchema` enum in the route before using it. |
+| `file` | ✅ | Image file. `image/png`, `image/jpeg`, `image/webp`, or `image/gif`. Max size depends on `folder` (see below). |
+| `folder` | ✅ | One of `"avatars"` \| `"todos"` — the Cloudinary bucket to upload into. New callers add their own value here (and a size cap) to the `folderSchema`/`MAX_BYTES` map in the route before using it. |
+
+Per-folder size cap: `avatars` 5MB, `todos` 2MB (`src/features/todos/lib/constants.ts` mirrors
+the latter client-side as `MAX_TODO_IMAGE_BYTES`, so the UI rejects oversized files before
+they're even sent). Todo callers also cap at 3 images per todo — enforced client-side by
+`TodoImageUpload` and server-side by `imageList` in `features/todos/validation.ts`.
 
 Uploads land in Cloudinary under `loop-everyday/{folder}/{userId}/…`.
 
@@ -447,9 +462,10 @@ Response:
 { "url": "https://res.cloudinary.com/…/loop-everyday/avatars/cms.../abc123.png", "publicId": "loop-everyday/avatars/cms.../abc123" }
 ```
 
-400 if `file` is missing, the wrong type, over 5MB, or `folder` isn't a recognized value. 401
-when unauthenticated. Requires `CLOUDINARY_CLOUD_NAME` / `CLOUDINARY_API_KEY` /
-`CLOUDINARY_API_SECRET` env vars (see `.env.example`) — without them every upload fails.
+400 if `file` is missing, the wrong type, over the folder's size cap, or `folder` isn't a
+recognized value. 401 when unauthenticated. Requires `CLOUDINARY_CLOUD_NAME` /
+`CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` env vars (see `.env.example`) — without them
+every upload fails.
 
 ---
 

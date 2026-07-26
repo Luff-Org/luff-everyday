@@ -15,7 +15,7 @@ export function TagChip({ name, color, active, onClick, onRemove }: TagChipProps
       } ${
         active
           ? "border-transparent text-background"
-          : "border-sub-text/15 text-sub-text bg-background/40 hover:border-sub-text/30"
+          : "border-sub-text/25 text-sub-text bg-background/40 hover:border-sub-text/45"
       }`}
       style={active ? { backgroundColor: color } : undefined}
     >

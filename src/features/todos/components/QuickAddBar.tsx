@@ -8,14 +8,16 @@ import { pickTagColor } from "@/features/todos/lib/tagColors";
 import { PriorityBadge } from "./PriorityBadge";
 import { TagChip } from "./TagChip";
 import { DateTimePicker } from "./DateTimePicker";
+import { TodoImageUpload } from "./TodoImageUpload";
 import type { Priority } from "@prisma/client";
+import type { TodoImageInput } from "@/features/todos/types";
 
 const SUGGESTED_TAGS = ["shopping", "learning", "work", "personal", "health"];
 const PRIORITIES: Priority[] = ["LOW", "MEDIUM", "HIGH", "URGENT"];
 
 const fieldClass =
-  "bg-background/40 border border-sub-text/20 rounded-lg px-2.5 py-1.5 text-xs font-bold text-foreground outline-none focus:border-primary/50 transition-colors";
-const labelClass = "text-[10px] font-black uppercase tracking-widest text-sub-text/50";
+  "bg-background/40 border border-sub-text/35 rounded-lg px-2.5 py-1.5 text-xs font-bold text-foreground outline-none focus:border-primary/50 transition-colors";
+const labelClass = "text-[10px] font-black uppercase tracking-widest text-sub-text/70";
 
 export function QuickAddBar() {
   const [value, setValue] = useState("");
@@ -23,6 +25,7 @@ export function QuickAddBar() {
   const [manualPriority, setManualPriority] = useState<Priority | "">("");
   const [dueDate, setDueDate] = useState<Date | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [images, setImages] = useState<TodoImageInput[]>([]);
   const addTodo = useTodoStore((s) => s.addTodo);
 
   const composedTitle = useMemo(() => {
@@ -52,18 +55,20 @@ export function QuickAddBar() {
       raw: composedTitle,
       dueDate: dueDate ? dueDate.toISOString() : undefined,
       description: description.trim() || null,
+      images: images.length ? images : undefined,
     });
     setValue("");
     setDescription("");
     setSelectedTags([]);
     setManualPriority("");
     setDueDate(null);
+    setImages([]);
   };
 
   const hasPreview = preview && (preview.priority || preview.tags.length > 0);
 
   return (
-    <div className="w-full flex flex-col gap-4 bg-background/30 backdrop-blur-md border border-sub-text/20 rounded-2xl p-5">
+    <div className="w-full flex flex-col gap-4 border border-card-border rounded-2xl p-5">
       <div className="flex items-center gap-3">
         <button
           onClick={submit}
@@ -79,7 +84,7 @@ export function QuickAddBar() {
             if (e.key === "Enter") submit();
           }}
           placeholder="What needs doing?"
-          className="flex-1 bg-transparent outline-none text-foreground placeholder:text-sub-text/50 font-medium"
+          className="flex-1 bg-transparent outline-none text-foreground placeholder:text-sub-text/70 font-medium"
         />
       </div>
 
@@ -88,7 +93,7 @@ export function QuickAddBar() {
         onChange={(e) => setDescription(e.target.value)}
         placeholder="Add a description (optional)"
         rows={2}
-        className="w-full pl-8 bg-transparent outline-none text-sm text-sub-text placeholder:text-sub-text/40 resize-none"
+        className="w-full pl-8 bg-transparent outline-none text-sm text-sub-text placeholder:text-sub-text/60 resize-none"
       />
 
       <div className="flex flex-wrap items-end gap-4 pl-8">
@@ -129,13 +134,17 @@ export function QuickAddBar() {
         </div>
       </div>
 
+      <div className="pl-8">
+        <TodoImageUpload images={images} onChange={setImages} />
+      </div>
+
       {hasPreview && (
         <div className="flex flex-wrap items-center gap-2 pl-8">
           {preview!.priority && <PriorityBadge priority={preview!.priority} />}
           {preview!.tags.map((tag) => (
             <span
               key={tag}
-              className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sub-text/10 text-sub-text"
+              className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sub-text/20 text-sub-text"
             >
               #{tag}
             </span>

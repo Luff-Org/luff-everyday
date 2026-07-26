@@ -69,6 +69,21 @@ export const todoRepository = {
     ]);
   },
 
+  /** Replaces all attached images for a todo (max 3, enforced at the validation layer). */
+  setImages(todoId: string, images: { url: string; publicId: string }[]) {
+    return prisma.$transaction([
+      prisma.todoImage.deleteMany({ where: { todoId } }),
+      prisma.todoImage.createMany({
+        data: images.map((img, i) => ({
+          todoId,
+          url: img.url,
+          publicId: img.publicId,
+          order: i,
+        })),
+      }),
+    ]);
+  },
+
   /** Replaces the set of tasks a todo waits on (blockers). */
   setDependencies(blockedId: string, blockingIds: string[]) {
     return prisma.$transaction([

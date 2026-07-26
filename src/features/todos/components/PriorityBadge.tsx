@@ -3,7 +3,7 @@
 import type { Priority } from "@prisma/client";
 
 const PRIORITY_STYLES: Record<Priority, string> = {
-  LOW: "bg-sub-text/10 text-sub-text",
+  LOW: "bg-sub-text/20 text-sub-text",
   MEDIUM: "bg-primary/10 text-primary",
   HIGH: "bg-amber-500/10 text-amber-500",
   URGENT: "bg-error/10 text-error",

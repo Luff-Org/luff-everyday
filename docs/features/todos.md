@@ -65,6 +65,20 @@ Up to 50 per todo (`url` must parse as a URL, ≤2000 chars; `title` ≤200). Wr
 whole set inside a transaction, with `order` = position in the submitted array. Cleared with
 `links: []`.
 
+## Attached images
+
+Up to `MAX_TODO_IMAGES` (3) per todo, each ≤`MAX_TODO_IMAGE_BYTES` (2MB)
+(`features/todos/lib/constants.ts`). Unlike links, the client never sends raw file bytes to
+`/api/todos` — `TodoImageUpload` (`features/todos/components/TodoImageUpload.tsx`) uploads
+each file to `POST /api/upload` (folder `"todos"`) as soon as it's picked, which is what
+actually enforces the 2MB cap server-side (`src/app/api/upload/route.ts`'s per-folder
+`MAX_BYTES`), then holds the returned `{url, publicId}` pairs in local state. Only on
+create/save does that list travel to `/api/todos` as `images`, written the same way as
+links: full replacement inside a transaction, `order` = position in the array, cleared with
+`images: []`. Used from both `QuickAddBar` (create) and `TaskDetailDrawer` (edit) via the
+same component. Deleting a todo cascades `TodoImage` rows, but does **not** delete the
+underlying Cloudinary asset (matches the profile avatar's replace behaviour).
+
 ## Recurrence
 
 `recurrence` ∈ `NONE | DAILY | WEEKLY | MONTHLY`. Nothing is scheduled in the background —
@@ -81,7 +95,7 @@ the next occurrence is created **on completion**, in the same transaction, by
    `recurringParentId` = the completed todo's id.
 6. Return `{ completed, next }` — the client prepends `next` to the list.
 
-Not cloned: attached links, dependency edges, `startDate`. `recurringParentId` is a soft
+Not cloned: attached links, attached images, dependency edges, `startDate`. `recurringParentId` is a soft
 reference (no FK), so deleting the parent leaves it dangling by design.
 
 The transaction runs with `{ maxWait: 10s, timeout: 20s }` — three sequential round trips (one

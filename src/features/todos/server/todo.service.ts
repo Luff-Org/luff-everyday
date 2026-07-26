@@ -121,6 +121,15 @@ export const todoService = {
             })),
           }
         : undefined,
+      images: input.images?.length
+        ? {
+            create: input.images.map((img, i) => ({
+              url: img.url,
+              publicId: img.publicId,
+              order: i,
+            })),
+          }
+        : undefined,
     });
   },
 
@@ -145,6 +154,11 @@ export const todoService = {
     // Links: full replacement of the attached-link set.
     if (input.links !== undefined) {
       await todoRepository.setLinks(id, input.links);
+    }
+
+    // Images: full replacement of the attached-image set (max 3, enforced by validation).
+    if (input.images !== undefined) {
+      await todoRepository.setImages(id, input.images);
     }
 
     // Dependencies: validate ownership, reject self/cycles, then replace.
